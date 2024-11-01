@@ -1,27 +1,25 @@
+// TimerScreen.js
 import React, { useEffect, useState } from 'react';
 import './App.css';
 
-function App() {
-  // Initialize state to hold the countdown timer in seconds
-  const [timeLeft, setTimeLeft] = useState(140); // 2 minutes in seconds
+function TimerScreen({ onComplete }) {
+  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
 
   useEffect(() => {
-    // Set up an interval that counts down every second
     const timer = setInterval(() => {
       setTimeLeft(prevTime => {
         if (prevTime <= 1) {
-          clearInterval(timer); // Clear the timer at 0
+          clearInterval(timer);
+          onComplete();
           return 0;
         }
         return prevTime - 1;
       });
     }, 1000);
 
-    // Clear interval on component unmount
     return () => clearInterval(timer);
-  }, []);
+  }, [onComplete]);
 
-  // Convert seconds to minutes and seconds for display
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
@@ -37,4 +35,4 @@ function App() {
   );
 }
 
-export default App;
+export default TimerScreen;

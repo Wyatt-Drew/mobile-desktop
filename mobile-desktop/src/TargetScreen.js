@@ -1,7 +1,8 @@
+// TargetScreen.js
 import React from 'react';
 import './App.css';
 
-function App() {
+function TargetScreen({ imageSrc }) {
   return (
     <div className="App">
       <header className="App-header">
@@ -9,11 +10,11 @@ function App() {
       </header>
       <div className="content">
         <div className="image-container">
-          <img src={`${process.env.PUBLIC_URL}/Target.png`} alt="Target Screen" className="target-image" />
+          <img src={imageSrc} alt="Target Screen" className="target-image" />
         </div>
       </div>
     </div>
   );
 }
 
-export default App;
+export default TargetScreen;
