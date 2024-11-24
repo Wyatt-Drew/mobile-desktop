@@ -16,6 +16,8 @@
   margin-bottom: 20px;
   font-size: 1.5em;
   color: #333333; /* Darker text for the header */
+  font-weight:bold;
+  text-decoration: underline;
 }
 
 /* Landmark Section */
@@ -28,6 +30,8 @@
   font-size: 1.2em;
   margin-bottom: 10px;
   color: #555555; /* Slightly lighter for clarity */
+  text-align: center;
+  font-weight:bold;
 }
 
 /* Row for Sliders */

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 
 function Countdown({ onComplete }) {
-  const [timeLeft, setTimeLeft] = useState(5); // Example: 5 seconds for testing
+  const [timeLeft, setTimeLeft] = useState(2); // Example: 5 seconds for testing
 
   useEffect(() => {
     const timer = setInterval(() => {
