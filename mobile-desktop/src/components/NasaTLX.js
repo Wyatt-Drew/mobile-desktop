@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./App.css";
+import "./NasaTLX.css"; // Custom CSS for styling the form
 
 const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
   const [responses, setResponses] = useState({
@@ -11,20 +11,22 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
     frustration: 1,
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false); // Tracks submission status
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (isSubmitting) return; // Prevent further submissions
+    if (isSubmitting) return;
 
-    setIsSubmitting(true); // Disable the button
-    console.log("Form submitted:", responses);
+    setIsSubmitting(true);
 
     try {
-      await onSubmit(subjectId, pdf, responses); // Wait for submission to complete
+      await onSubmit(subjectId, pdf, responses);
+      console.log("NASA-TLX form submitted:", responses);
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error submitting NASA-TLX form:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -36,80 +38,84 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
     }));
   };
 
+  const renderSlider = (name, shortName, question, leftLabel, rightLabel) => (
+    <div className="slider-container">
+      <div className="slider-label">
+        <strong>{shortName}</strong>
+        <p>{question}</p>
+      </div>
+      <input
+        type="range"
+        name={name}
+        min="1"
+        max="10"
+        value={responses[name]}
+        onChange={handleInputChange}
+        className="slider"
+      />
+      <div className="slider-labels">
+        <span className="slider-left">{leftLabel}</span>
+        <span className="slider-right">{rightLabel}</span>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="App">
-      <h1>Fill Out NASA-TLX</h1>
+    <div className="nasa-tlx-container">
+      <h1>NASA Task Load Index (TLX)</h1>
+      <p className="nasa-tlx-description">
+        <strong>Figure 8.6</strong><br />
+        NASA Task Load Index (TLX) method assesses workload on five 7-point scales.
+        Increments of high, medium, and low estimates for each point result in 21
+        gradations on the scales.
+      </p>
       <form className="nasa-tlx-form" onSubmit={handleSubmit}>
-        <label>
-          Rate Mental Demand:
-          <input
-            type="range"
-            name="mentalDemand"
-            min="1"
-            max="10"
-            value={responses.mentalDemand}
-            onChange={handleInputChange}
-          />
-        </label>
-        <label>
-          Rate Physical Demand:
-          <input
-            type="range"
-            name="physicalDemand"
-            min="1"
-            max="10"
-            value={responses.physicalDemand}
-            onChange={handleInputChange}
-          />
-        </label>
-        <label>
-          Rate Temporal Demand:
-          <input
-            type="range"
-            name="temporalDemand"
-            min="1"
-            max="10"
-            value={responses.temporalDemand}
-            onChange={handleInputChange}
-          />
-        </label>
-        <label>
-          Rate Performance:
-          <input
-            type="range"
-            name="performance"
-            min="1"
-            max="10"
-            value={responses.performance}
-            onChange={handleInputChange}
-          />
-        </label>
-        <label>
-          Rate Effort:
-          <input
-            type="range"
-            name="effort"
-            min="1"
-            max="10"
-            value={responses.effort}
-            onChange={handleInputChange}
-          />
-        </label>
-        <label>
-          Rate Frustration:
-          <input
-            type="range"
-            name="frustration"
-            min="1"
-            max="10"
-            value={responses.frustration}
-            onChange={handleInputChange}
-          />
-        </label>
+        {renderSlider(
+          "physicalDemand",
+          "Physical Demand",
+          "How physically demanding was the task?",
+          "Very Low",
+          "Very High"
+        )}
+        {renderSlider(
+          "mentalDemand",
+          "Mental Demand",
+          "How mentally demanding was the task?",
+          "Very Low",
+          "Very High"
+        )}
+        {renderSlider(
+          "temporalDemand",
+          "Temporal Demand",
+          "How hurried or rushed was the pace of the task?",
+          "Very Low",
+          "Very High"
+        )}
+        {renderSlider(
+          "performance",
+          "Performance",
+          "How successful were you in accomplishing what you were asked to do?",
+          "Perfect",
+          "Failure"
+        )}
+        {renderSlider(
+          "effort",
+          "Effort",
+          "How hard did you have to work to accomplish your level of performance?",
+          "Very Low",
+          "Very High"
+        )}
+        {renderSlider(
+          "frustration",
+          "Frustration",
+          "How insecure, discouraged, irritated, stressed, and annoyed were you?",
+          "Very Low",
+          "Very High"
+        )}
         <button
           type="submit"
-          className="action-button"
-          disabled={isSubmitting} // Disable button if already submitting
+          className="submit-button"
+          disabled={isSubmitting}
         >
           {isSubmitting ? "Submitting..." : "Submit"}
         </button>
