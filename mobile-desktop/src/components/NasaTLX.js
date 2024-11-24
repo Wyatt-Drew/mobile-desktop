@@ -38,6 +38,14 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
     }));
   };
 
+  const renderTicks = (min, max) => {
+    const ticks = [];
+    for (let i = min; i <= max; i++) {
+      ticks.push(<span key={i} className="tick">{i}</span>);
+    }
+    return <div className="ticks">{ticks}</div>;
+  };
+
   const renderSlider = (name, shortName, question, leftLabel, rightLabel) => (
     <div className="slider-container">
       <div className="slider-label">
@@ -53,6 +61,7 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
         onChange={handleInputChange}
         className="slider"
       />
+      {renderTicks(1, 10)}
       <div className="slider-labels">
         <span className="slider-left">{leftLabel}</span>
         <span className="slider-right">{rightLabel}</span>
