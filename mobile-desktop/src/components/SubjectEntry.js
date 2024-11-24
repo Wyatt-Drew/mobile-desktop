@@ -1,10 +1,11 @@
 import React, { useState } from "react";
+import "./App.css";
 
 const SubjectEntry = ({ onSubmit, error }) => {
   const [id, setId] = useState("");
 
   return (
-    <div>
+    <div className="App">
       <h1>Enter Subject ID</h1>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <input
@@ -12,8 +13,11 @@ const SubjectEntry = ({ onSubmit, error }) => {
         value={id}
         onChange={(e) => setId(e.target.value)}
         placeholder="Subject ID"
+        className="input-field"
       />
-      <button onClick={() => onSubmit(id)}>Submit</button>
+      <button className="action-button" onClick={() => onSubmit(id)}>
+        Submit
+      </button>
     </div>
   );
 };

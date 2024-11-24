@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import "./App.css";
 
 function Countdown({ onComplete }) {
-  const [timeLeft, setTimeLeft] = useState(5); // 2 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(5); // Example: 5 seconds for testing
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prevTime => {
+      setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
           clearInterval(timer);
-          onComplete(); // Call the provided onComplete function when time is up
+          onComplete();
           return 0;
         }
         return prevTime - 1;
@@ -24,12 +24,10 @@ function Countdown({ onComplete }) {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Time to familiarize yourself with the PDF</h1>
-        <div className="timer">
-          {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
-        </div>
-      </header>
+      <h1>Time to familiarize yourself with the PDF</h1>
+      <div className="timer">
+        {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+      </div>
     </div>
   );
 }

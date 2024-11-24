@@ -1,10 +1,15 @@
 import React from "react";
+import "./App.css";
 
 const TargetDisplay = ({ target, onTargetFound }) => (
-  <div>
-    <h1>Find this Target</h1>
-    <img src={`/${target}.png`} alt="Target" />
-    <button onClick={onTargetFound}>Target Found</button>
+  <div className="App">
+    <h1>Find This Target</h1>
+    <div className="image-container">
+      <img src={`/${target}.png`} alt="Target" className="target-image" />
+    </div>
+    <button className="action-button" onClick={onTargetFound}>
+      Target Found
+    </button>
   </div>
 );
 
