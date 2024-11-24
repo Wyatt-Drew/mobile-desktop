@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 
-const SubjectEntry = ({ onSubmit }) => {
+const SubjectEntry = ({ onSubmit, error }) => {
   const [id, setId] = useState("");
 
   return (
     <div>
       <h1>Enter Subject ID</h1>
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <input
         type="text"
         value={id}

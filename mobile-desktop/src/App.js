@@ -7,6 +7,7 @@ import TargetDisplay from "./components/TargetDisplay";
 import NasaTLX from "./components/NasaTLX";
 import CompletionScreen from "./components/CompletionScreen";
 
+// Define the target table with subject keys
 const targetTable = {
   subject1: [
     { pdf: "pdf1", targets: ["target1", "target2", "target3", "target4", "target5"] },
@@ -18,13 +19,23 @@ const targetTable = {
 };
 
 const App = () => {
-  const [state, setState] = useState("pairing"); // Tracks the current phase
-  const [subjectID, setSubjectID] = useState(""); // Tracks the subject's ID
-  const [targets, setTargets] = useState([]); // Holds the target list for the subject
-  const [currentPDFIndex, setCurrentPDFIndex] = useState(0); // Tracks the current PDF in the list
-  const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Tracks the current target
-  const [studyComplete, setStudyComplete] = useState(false); // Tracks whether the study is complete
+  const [state, setState] = useState("pairing"); // Current phase of the study
+  const [subjectID, setSubjectID] = useState(""); // Subject's ID
+  const [targets, setTargets] = useState([]); // List of PDFs and their targets
+  const [currentPDFIndex, setCurrentPDFIndex] = useState(0); // Current PDF
+  const [currentTargetIndex, setCurrentTargetIndex] = useState(0); // Current target
+  const [studyComplete, setStudyComplete] = useState(false); // Study completion status
+  const [error, setError] = useState(""); // Error message for invalid subjectID
 
+  // Map user input to a valid subject key
+  const getSubjectKey = (input) => {
+    if (!isNaN(input)) {
+      return `subject${input}`; // Map numeric input like "1" to "subject1"
+    }
+    return input.trim(); // Otherwise, return trimmed string input
+  };
+
+  // Handle the transitions between states
   const nextState = () => {
     if (state === "pairing") {
       setState("subject-entry");
@@ -37,17 +48,36 @@ const App = () => {
     } else if (state === "target-display") {
       const currentTargets = targets[currentPDFIndex]?.targets || [];
       if (currentTargetIndex < currentTargets.length - 1) {
-        setCurrentTargetIndex(currentTargetIndex + 1); // Move to the next target
-      } else if (currentPDFIndex < targets.length - 1) {
-        setCurrentPDFIndex(currentPDFIndex + 1); // Move to the next PDF
-        setCurrentTargetIndex(0);
-        setState("nasa-tlx");
+        // Move to the next target in the current PDF
+        setCurrentTargetIndex(currentTargetIndex + 1);
       } else {
-        setStudyComplete(true); // All PDFs and targets completed
-        setState("complete");
+        // All targets in this PDF are done, move to NASA-TLX
+        setCurrentTargetIndex(0); // Reset for the next PDF
+        setState("nasa-tlx");
       }
     } else if (state === "nasa-tlx") {
-      setState("countdown"); // Return to countdown for the next PDF
+      if (currentPDFIndex < targets.length - 1) {
+        // Move to the next PDF
+        setCurrentPDFIndex(currentPDFIndex + 1);
+        setState("countdown"); // Start the countdown for the next PDF
+      } else {
+        // All PDFs are done
+        setStudyComplete(true);
+        setState("complete");
+      }
+    }
+  };
+
+  // Handle subject entry submission
+  const handleSubjectEntry = (id) => {
+    const subjectKey = getSubjectKey(id);
+    if (targetTable[subjectKey]) {
+      setSubjectID(subjectKey); // Save the formatted subject ID
+      setTargets(targetTable[subjectKey]); // Load targets for the subject
+      setError(""); // Clear any previous error
+      nextState();
+    } else {
+      setError("Invalid Subject ID. Please try again.");
     }
   };
 
@@ -59,11 +89,8 @@ const App = () => {
       {/* Subject Entry */}
       {state === "subject-entry" && (
         <SubjectEntry
-          onSubmit={(id) => {
-            setSubjectID(id);
-            setTargets(targetTable[id] || []);
-            nextState();
-          }}
+          onSubmit={handleSubjectEntry}
+          error={error}
         />
       )}
 
@@ -71,11 +98,7 @@ const App = () => {
       {state === "start-screen" && <StartScreen onBegin={nextState} />}
 
       {/* Countdown Timer */}
-      {state === "countdown" && (
-        <Countdown
-          onComplete={nextState} // Transition to the next state after countdown
-        />
-      )}
+      {state === "countdown" && <Countdown onComplete={nextState} />}
 
       {/* Target Display */}
       {state === "target-display" && (
