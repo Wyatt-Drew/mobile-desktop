@@ -69,7 +69,3 @@ body, html {
   display: block;
   margin: 10px 0;
 }
-
-.nasa-tlx-form input[type="range"] {
-  width: 80%;
-}

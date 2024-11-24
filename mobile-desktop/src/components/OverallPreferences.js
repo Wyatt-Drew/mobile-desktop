@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "./App.css";
+import CustomSlider from "../components/CustomSlider"; // Adjust path as needed
+import "./OverallPreferences.css"; // Use the updated CSS
 
 const OverallPreferences = ({ subjectId, onSubmit }) => {
   const [responses, setResponses] = useState({
@@ -11,7 +12,7 @@ const OverallPreferences = ({ subjectId, onSubmit }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (section, field, value) => {
+  const handleSliderChange = (section, field, value) => {
     setResponses((prevResponses) => ({
       ...prevResponses,
       [section]: {
@@ -28,7 +29,6 @@ const OverallPreferences = ({ subjectId, onSubmit }) => {
     setIsSubmitting(true);
     console.log("Form submitted:", responses);
 
-    // Submit each section to the spreadsheet
     try {
       for (const [section, values] of Object.entries(responses)) {
         await onSubmit(subjectId, section, values);
@@ -44,48 +44,53 @@ const OverallPreferences = ({ subjectId, onSubmit }) => {
   const renderSection = (sectionKey, label) => (
     <div className="preferences-section">
       <h3>{label}</h3>
-      <label>
-        Accuracy:
-        <input
-          type="range"
-          min="1"
-          max="10"
+      <div className="slider-row">
+        <CustomSlider
+          name={`${sectionKey}-accuracy`}
           value={responses[sectionKey].accuracy}
-          onChange={(e) => handleInputChange(sectionKey, "accuracy", e.target.value)}
+          question="Accuracy"
+          shortName="Accuracy"
+          min={1}
+          max={10}
+          leftLabel="Low"
+          rightLabel="High"
+          onChange={(name, value) => handleSliderChange(sectionKey, "accuracy", value)}
         />
-      </label>
-      <label>
-        Speed:
-        <input
-          type="range"
-          min="1"
-          max="10"
+        <CustomSlider
+          name={`${sectionKey}-speed`}
           value={responses[sectionKey].speed}
-          onChange={(e) => handleInputChange(sectionKey, "speed", e.target.value)}
+          question="Speed"
+          shortName="Speed"
+          min={1}
+          max={10}
+          leftLabel="Slow"
+          rightLabel="Fast"
+          onChange={(name, value) => handleSliderChange(sectionKey, "speed", value)}
         />
-      </label>
-      <label>
-        Overall Preference:
-        <input
-          type="range"
-          min="1"
-          max="10"
+        <CustomSlider
+          name={`${sectionKey}-preference`}
           value={responses[sectionKey].preference}
-          onChange={(e) => handleInputChange(sectionKey, "preference", e.target.value)}
+          question="Overall Preference"
+          shortName="Preference"
+          min={1}
+          max={10}
+          leftLabel="Low"
+          rightLabel="High"
+          onChange={(name, value) => handleSliderChange(sectionKey, "preference", value)}
         />
-      </label>
+      </div>
     </div>
   );
 
   return (
-    <div className="App">
+    <div className="preferences-container">
       <h1>Overall Preferences Questionnaire</h1>
       <form onSubmit={handleSubmit}>
         {renderSection("noLandmarks", "No Landmarks")}
         {renderSection("iconsNumbersColored", "Icons, Numbers, Colored")}
         {renderSection("icons", "Icons")}
         {renderSection("lettersThumbnails", "Letters and Thumbnails")}
-        <button type="submit" className="action-button" disabled={isSubmitting}>
+        <button type="submit" className="submit-button" disabled={isSubmitting}>
           {isSubmitting ? "Submitting..." : "Submit"}
         </button>
       </form>

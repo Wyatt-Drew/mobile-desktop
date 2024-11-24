@@ -45,11 +45,6 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
       <Typography variant="h4" gutterBottom>
         NASA Task Load Index (TLX)
       </Typography>
-      <Typography variant="body1" paragraph>
-        <strong>Figure 8.6</strong>
-        <br />
-        NASA Task Load Index (TLX) method assesses workload on five 7-point scales. Increments of high, medium, and low estimates for each point result in 21 gradations on the scales.
-      </Typography>
       <form onSubmit={handleSubmit}>
         <CustomSlider
           name="physicalDemand"

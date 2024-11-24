@@ -1,0 +1,72 @@
+/* General Form Container */
+.preferences-container {
+  max-width: 800px;
+  margin: 20px auto; /* Add vertical and horizontal spacing */
+  padding: 20px;
+  background: #ffffff; /* White background for the form */
+  color: #000000; /* Black text for contrast */
+  font-family: Arial, sans-serif;
+  border-radius: 10px; /* Rounded corners for a modern design */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+/* Header */
+.preferences-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.5em;
+  color: #333333; /* Darker text for the header */
+}
+
+/* Landmark Section */
+.preferences-section {
+  margin-bottom: 20px;
+}
+
+/* Row for Inputs */
+.slider-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between; /* Space out the inputs */
+  align-items: center; /* Align inputs to the center */
+  gap: 20px; /* Add space between sliders */
+  flex-wrap: wrap; /* Allow wrapping for smaller screens */
+}
+
+/* Slider Container */
+.slider-container {
+  flex: 1; /* Ensure equal width for sliders */
+  min-width: 200px; /* Minimum width for responsiveness */
+  margin-bottom: 10px;
+}
+
+/* Section Titles */
+.preferences-section h3 {
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  color: #555555;
+}
+
+/* Buttons */
+.submit-button {
+  padding: 10px 20px;
+  font-size: 1em;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 200px;
+  margin: 20px auto 0;
+  display: block;
+}
+
+.submit-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #45a049;
+}
