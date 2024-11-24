@@ -9,7 +9,7 @@ const Pairing = ({ onNext }) => {
   return (
     <div className="App">
       <h1>Scan to Pair</h1>
-      <QRCodeCanvas value={pairingURL} className="qr-code" />
+      <QRCodeCanvas value={pairingURL} className="qr-code" size={200} /> 
       <button className="action-button" onClick={onNext}>
         Simulate Pairing Complete
       </button>

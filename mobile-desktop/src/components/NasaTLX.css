@@ -1,6 +1,6 @@
 /* Background container */
 .nasa-tlx-background {
-  background-color: #f4f4f4; /* Light gray background */
+  background-color: black; /* Light gray background */
   min-height: 100vh; /* Ensure it covers the full screen height */
   display: flex;
   justify-content: center;
@@ -26,6 +26,8 @@
   text-align: center;
   margin-bottom: 10px;
   font-size: 1.5em;
+  font-weight:bold;
+  text-decoration: underline;
 }
 
 /* Form description */
