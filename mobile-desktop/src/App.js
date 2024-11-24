@@ -5,6 +5,7 @@ import StartScreen from "./components/StartScreen";
 import Countdown from "./components/Countdown";
 import TargetDisplay from "./components/TargetDisplay";
 import NasaTLX from "./components/NasaTLX";
+import OverallPreferences from "./components/OverallPreferences";
 import CompletionScreen from "./components/CompletionScreen";
 import { appendRow } from "./components/googleSheetsService";
 
@@ -66,11 +67,15 @@ const App = () => {
         setCurrentPDFIndex(currentPDFIndex + 1);
         setState("countdown"); // Start the countdown for the next PDF
       } else {
-        // All PDFs are done
-        console.log("Study complete.");
-        setStudyComplete(true);
-        setState("complete");
+        // All PDFs and NASA-TLX forms are completed, move to overall preferences
+        console.log("All PDFs completed. Transitioning to overall preferences.");
+        setState("overall-preferences");
       }
+    } else if (state === "overall-preferences") {
+      // Study complete after overall preferences
+      console.log("Study complete.");
+      setStudyComplete(true);
+      setState("complete");
     }
   };
 
@@ -124,6 +129,19 @@ const App = () => {
     }
   };
 
+  const handleOverallPreferencesSubmit = async (subjectId, landmarkStyle, { accuracy, speed, preference }) => {
+    console.log("Submitting overall preferences for:", landmarkStyle);
+    try {
+      await appendRow("Overall", [subjectId, landmarkStyle, accuracy, speed, preference]);
+      console.log(`Preferences for ${landmarkStyle} submitted successfully!`);
+    } catch (error) {
+      console.error(`Failed to submit preferences for ${landmarkStyle}:`, error);
+    }
+  
+    // Transition to the next state after submission
+    setStudyComplete(true); // Mark the study as complete
+    setState("complete");
+  };
 
   return (
     <div>
@@ -161,6 +179,12 @@ const App = () => {
           subjectId={subjectID}
           pdf={targets[currentPDFIndex]?.pdf}
           onSubmit={handleNasaTLXSubmit}
+        />
+      )}
+      {state === "overall-preferences" && (
+        <OverallPreferences
+          subjectId={subjectID}
+          onSubmit={handleOverallPreferencesSubmit}
         />
       )}
 
