@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import "./NasaTLX.css"; // Custom CSS for styling the form
+import Slider from "../components/Slider";
+import "./NasaTLX.css"; // Custom CSS for styling
 
 const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
   const [responses, setResponses] = useState({
@@ -30,46 +31,12 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleSliderChange = (name, value) => {
     setResponses((prevResponses) => ({
       ...prevResponses,
       [name]: value,
     }));
   };
-
-  const renderTicks = (min, max) => {
-    const ticks = [];
-    for (let i = min; i <= max; i++) {
-      if (i % 2 !== 0) { // Render only odd numbers
-        ticks.push(<span key={i} className="tick">{i}</span>);
-      }
-    }
-    return <div className="ticks">{ticks}</div>;
-  };
-
-  const renderSlider = (name, shortName, question, leftLabel, rightLabel) => (
-    <div className="slider-container">
-      <div className="slider-label">
-        <strong>{shortName}</strong>
-        <p>{question}</p>
-      </div>
-      <input
-        type="range"
-        name={name}
-        min="1"
-        max="21"
-        value={responses[name]}
-        onChange={handleInputChange}
-        className="slider"
-      />
-      {renderTicks(1, 21)}
-      <div className="slider-labels">
-        <span className="slider-left">{leftLabel}</span>
-        <span className="slider-right">{rightLabel}</span>
-      </div>
-    </div>
-  );
 
   return (
     <div className="nasa-tlx-container">
@@ -81,48 +48,60 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
         gradations on the scales.
       </p>
       <form className="nasa-tlx-form" onSubmit={handleSubmit}>
-        {renderSlider(
-          "physicalDemand",
-          "Physical Demand",
-          "How physically demanding was the task?",
-          "Very Low",
-          "Very High"
-        )}
-        {renderSlider(
-          "mentalDemand",
-          "Mental Demand",
-          "How mentally demanding was the task?",
-          "Very Low",
-          "Very High"
-        )}
-        {renderSlider(
-          "temporalDemand",
-          "Temporal Demand",
-          "How hurried or rushed was the pace of the task?",
-          "Very Low",
-          "Very High"
-        )}
-        {renderSlider(
-          "performance",
-          "Performance",
-          "How successful were you in accomplishing what you were asked to do?",
-          "Perfect",
-          "Failure"
-        )}
-        {renderSlider(
-          "effort",
-          "Effort",
-          "How hard did you have to work to accomplish your level of performance?",
-          "Very Low",
-          "Very High"
-        )}
-        {renderSlider(
-          "frustration",
-          "Frustration",
-          "How insecure, discouraged, irritated, stressed, and annoyed were you?",
-          "Very Low",
-          "Very High"
-        )}
+        <Slider
+          name="physicalDemand"
+          value={responses.physicalDemand}
+          question="How physically demanding was the task?"
+          shortName="Physical Demand"
+          leftLabel="Very Low"
+          rightLabel="Very High"
+          onChange={handleSliderChange}
+        />
+        <Slider
+          name="mentalDemand"
+          value={responses.mentalDemand}
+          question="How mentally demanding was the task?"
+          shortName="Mental Demand"
+          leftLabel="Very Low"
+          rightLabel="Very High"
+          onChange={handleSliderChange}
+        />
+        <Slider
+          name="temporalDemand"
+          value={responses.temporalDemand}
+          question="How hurried or rushed was the pace of the task?"
+          shortName="Temporal Demand"
+          leftLabel="Very Low"
+          rightLabel="Very High"
+          onChange={handleSliderChange}
+        />
+        <Slider
+          name="performance"
+          value={responses.performance}
+          question="How successful were you in accomplishing what you were asked to do?"
+          shortName="Performance"
+          leftLabel="Perfect"
+          rightLabel="Failure"
+          onChange={handleSliderChange}
+        />
+        <Slider
+          name="effort"
+          value={responses.effort}
+          question="How hard did you have to work to accomplish your level of performance?"
+          shortName="Effort"
+          leftLabel="Very Low"
+          rightLabel="Very High"
+          onChange={handleSliderChange}
+        />
+        <Slider
+          name="frustration"
+          value={responses.frustration}
+          question="How insecure, discouraged, irritated, stressed, and annoyed were you?"
+          shortName="Frustration"
+          leftLabel="Very Low"
+          rightLabel="Very High"
+          onChange={handleSliderChange}
+        />
         <button
           type="submit"
           className="submit-button"

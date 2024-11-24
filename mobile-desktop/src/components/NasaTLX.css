@@ -32,6 +32,7 @@
   margin-bottom: 20px;
   position: relative;
   padding: 10px 0;
+  width: 100%;
 }
 
 .slider-label {
@@ -57,13 +58,18 @@
 
 .ticks {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   margin-top: -10px;
+  width: 100%; /* Ensure it matches the slider width */
+  position: relative;
 }
 
 .tick {
   font-size: 0.8em;
   text-align: center;
+  position: absolute;
+  white-space: nowrap;
+  transform: translateX(-50%);
 }
 
 .slider-labels {
@@ -91,8 +97,9 @@
   background-color: #ccc;
   cursor: not-allowed;
 }
+
 .nasa-tlx-form input[type="range"] {
   width: 100%;
-  margin: 10px 0; /* Add vertical spacing above and below */
-  padding: 0; /* Ensure no extra padding */
+  margin: 10px auto;
+  display: block;
 }
