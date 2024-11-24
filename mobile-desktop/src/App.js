@@ -113,6 +113,18 @@ const App = () => {
     nextState();
   };
 
+
+  const handleLogPerformance = async ({ subjectId, pdfId, target, taskTime, scrollDistance, numberOfTaps }) => {
+    console.log("Logging performance data...");
+    try {
+      await appendRow("Performance", [subjectId, pdfId, target, taskTime, scrollDistance, numberOfTaps]);
+      console.log("Performance data logged successfully!");
+    } catch (error) {
+      console.error("Failed to log performance data:", error);
+    }
+  };
+
+
   return (
     <div>
       {/* Pairing Screen */}
@@ -134,10 +146,13 @@ const App = () => {
 
       {/* Target Display */}
       {state === "target-display" && (
-        <TargetDisplay
-          target={targets[currentPDFIndex]?.targets[currentTargetIndex]} // Current target
-          onTargetFound={nextState} // Callback when the target is found
-        />
+      <TargetDisplay
+        subjectId={subjectID}
+        pdfId={targets[currentPDFIndex]?.pdf}
+        target={targets[currentPDFIndex]?.targets[currentTargetIndex]}
+        onTargetFound={nextState}
+        onLogPerformance={handleLogPerformance}
+      />
       )}
 
       {/* NASA-TLX Form */}
