@@ -6,6 +6,7 @@ import Countdown from "./components/Countdown";
 import TargetDisplay from "./components/TargetDisplay";
 import NasaTLX from "./components/NasaTLX";
 import CompletionScreen from "./components/CompletionScreen";
+import { appendRow } from "./components/googleSheetsService";
 
 // Define the target table with subject keys
 const targetTable = {
@@ -81,6 +82,25 @@ const App = () => {
     }
   };
 
+  // Handle NASA-TLX form submission
+  const handleNasaTLXSubmit = async (subjectId, pdf, responses) => {
+    // Write the responses to Google Sheets
+    await appendRow("Nasa-TLX", [
+      subjectId,
+      pdf,
+      responses.mentalDemand,
+      responses.physicalDemand,
+      responses.temporalDemand,
+      responses.performance,
+      responses.effort,
+      responses.frustration,
+    ]);
+    console.log("NASA-TLX data submitted:", responses);
+
+    // Move to the next state
+    nextState();
+  };
+
   return (
     <div>
       {/* Pairing Screen */}
@@ -109,7 +129,13 @@ const App = () => {
       )}
 
       {/* NASA-TLX Form */}
-      {state === "nasa-tlx" && <NasaTLX onBeginNext={nextState} />}
+      {state === "nasa-tlx" && (
+        <NasaTLX
+          subjectId={subjectID}
+          pdf={targets[currentPDFIndex]?.pdf}
+          onSubmit={handleNasaTLXSubmit}
+        />
+      )}
 
       {/* Completion Screen */}
       {studyComplete && <CompletionScreen />}
