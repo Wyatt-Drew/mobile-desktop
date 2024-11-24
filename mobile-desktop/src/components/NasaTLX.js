@@ -41,7 +41,9 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
   const renderTicks = (min, max) => {
     const ticks = [];
     for (let i = min; i <= max; i++) {
-      ticks.push(<span key={i} className="tick">{i}</span>);
+      if (i % 2 !== 0) { // Render only odd numbers
+        ticks.push(<span key={i} className="tick">{i}</span>);
+      }
     }
     return <div className="ticks">{ticks}</div>;
   };
@@ -56,12 +58,12 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
         type="range"
         name={name}
         min="1"
-        max="10"
+        max="21"
         value={responses[name]}
         onChange={handleInputChange}
         className="slider"
       />
-      {renderTicks(1, 10)}
+      {renderTicks(1, 21)}
       <div className="slider-labels">
         <span className="slider-left">{leftLabel}</span>
         <span className="slider-right">{rightLabel}</span>

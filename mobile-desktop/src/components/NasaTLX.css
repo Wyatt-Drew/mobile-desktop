@@ -93,5 +93,6 @@
 }
 .nasa-tlx-form input[type="range"] {
   width: 100%;
-  margin-bottom:10;
+  margin: 10px 0; /* Add vertical spacing above and below */
+  padding: 0; /* Ensure no extra padding */
 }
