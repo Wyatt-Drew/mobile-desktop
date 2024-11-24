@@ -11,9 +11,21 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
     frustration: 1,
   });
 
-  const handleSubmit = (event) => {
-    event.preventDefault(); // Prevent the form from refreshing the page
-    onSubmit(subjectId, pdf, responses); // Call the parent function to handle submission
+  const [isSubmitting, setIsSubmitting] = useState(false); // Tracks submission status
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (isSubmitting) return; // Prevent further submissions
+
+    setIsSubmitting(true); // Disable the button
+    console.log("Form submitted:", responses);
+
+    try {
+      await onSubmit(subjectId, pdf, responses); // Wait for submission to complete
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -94,8 +106,12 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
             onChange={handleInputChange}
           />
         </label>
-        <button type="submit" className="action-button">
-          Submit
+        <button
+          type="submit"
+          className="action-button"
+          disabled={isSubmitting} // Disable button if already submitting
+        >
+          {isSubmitting ? "Submitting..." : "Submit"}
         </button>
       </form>
     </div>

@@ -1,9 +1,14 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors"); // Import cors middleware
 const { google } = require("googleapis");
 const credentials = require("./mobile-dev-experiment-ff2e23e2fde6.json");
 
 const app = express();
+
+// Enable CORS for all requests
+app.use(cors());
+
 app.use(bodyParser.json());
 
 const auth = new google.auth.JWT(
@@ -32,6 +37,8 @@ app.post("/append-row", async (req, res) => {
         values: [values],
       },
     });
+
+    console.log("Row added successfully");
     res.status(200).json({ message: "Row added successfully" });
   } catch (error) {
     console.error("Error appending row:", error);

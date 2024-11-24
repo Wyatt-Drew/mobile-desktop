@@ -38,6 +38,7 @@ const App = () => {
 
   // Handle the transitions between states
   const nextState = () => {
+    console.log(`Transitioning from state: ${state}`);
     if (state === "pairing") {
       setState("subject-entry");
     } else if (state === "subject-entry") {
@@ -50,19 +51,23 @@ const App = () => {
       const currentTargets = targets[currentPDFIndex]?.targets || [];
       if (currentTargetIndex < currentTargets.length - 1) {
         // Move to the next target in the current PDF
+        console.log(`Moving to next target in PDF: ${targets[currentPDFIndex]?.pdf}`);
         setCurrentTargetIndex(currentTargetIndex + 1);
       } else {
         // All targets in this PDF are done, move to NASA-TLX
+        console.log(`All targets in PDF ${targets[currentPDFIndex]?.pdf} found.`);
         setCurrentTargetIndex(0); // Reset for the next PDF
         setState("nasa-tlx");
       }
     } else if (state === "nasa-tlx") {
       if (currentPDFIndex < targets.length - 1) {
         // Move to the next PDF
+        console.log(`Starting next PDF: ${targets[currentPDFIndex + 1]?.pdf}`);
         setCurrentPDFIndex(currentPDFIndex + 1);
         setState("countdown"); // Start the countdown for the next PDF
       } else {
         // All PDFs are done
+        console.log("Study complete.");
         setStudyComplete(true);
         setState("complete");
       }
@@ -72,10 +77,12 @@ const App = () => {
   // Handle subject entry submission
   const handleSubjectEntry = (id) => {
     const subjectKey = getSubjectKey(id);
+    console.log(`Entered Subject ID: ${id} (mapped to ${subjectKey})`);
     if (targetTable[subjectKey]) {
       setSubjectID(subjectKey); // Save the formatted subject ID
       setTargets(targetTable[subjectKey]); // Load targets for the subject
       setError(""); // Clear any previous error
+      console.log(`Loaded targets for ${subjectKey}:`, targetTable[subjectKey]);
       nextState();
     } else {
       setError("Invalid Subject ID. Please try again.");
@@ -84,18 +91,23 @@ const App = () => {
 
   // Handle NASA-TLX form submission
   const handleNasaTLXSubmit = async (subjectId, pdf, responses) => {
-    // Write the responses to Google Sheets
-    await appendRow("Nasa-TLX", [
-      subjectId,
-      pdf,
-      responses.mentalDemand,
-      responses.physicalDemand,
-      responses.temporalDemand,
-      responses.performance,
-      responses.effort,
-      responses.frustration,
-    ]);
-    console.log("NASA-TLX data submitted:", responses);
+    console.log(`Submitting NASA-TLX for ${subjectId}, PDF: ${pdf}`);
+    try {
+      // Write the responses to Google Sheets
+      await appendRow("Nasa-TLX", [
+        subjectId,
+        pdf,
+        responses.mentalDemand,
+        responses.physicalDemand,
+        responses.temporalDemand,
+        responses.performance,
+        responses.effort,
+        responses.frustration,
+      ]);
+      console.log("NASA-TLX data submitted:", responses);
+    } catch (error) {
+      console.error("Failed to submit NASA-TLX data:", error);
+    }
 
     // Move to the next state
     nextState();
