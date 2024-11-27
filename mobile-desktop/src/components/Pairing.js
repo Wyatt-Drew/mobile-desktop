@@ -8,18 +8,21 @@ const Pairing = ({ onPairingComplete }) => {
   const [pairingStatus, setPairingStatus] = useState("waiting");
 
   useEffect(() => {
-    // Fetch session ID from backend
     const fetchSessionId = async () => {
       try {
+        // Fetch session ID from backend
         const response = await fetch("https://mobile-backend-74th.onrender.com/generate-session");
         const { sessionId } = await response.json();
-        console.log("Fetched session ID:", sessionId); // Debug log
+        console.log("Fetched session ID:", sessionId); // Log session ID for debugging
         setSessionId(sessionId);
 
-        // Initialize WebSocket with session ID
-        const ws = new WebSocket(`wss://mobile-backend-74th.onrender.com/?session=${sessionId}`);
+        // Initialize WebSocket after session ID is set
+        const wsUrl = `wss://mobile-backend-74th.onrender.com/?session=${sessionId}`;
+        console.log("Initializing WebSocket with URL:", wsUrl);
+        const ws = new WebSocket(wsUrl);
         setWebSocket(ws);
 
+        // WebSocket event handlers
         ws.onopen = () => {
           console.log("WebSocket connected for session:", sessionId);
         };
@@ -31,7 +34,7 @@ const Pairing = ({ onPairingComplete }) => {
 
             if (data.type === "joined") {
               console.log("Mobile joined session. Starting WebRTC...");
-              startWebRTC();
+              startWebRTC(ws);
             } else if (data.type === "answer") {
               console.log("Received WebRTC answer:", data.answer);
               peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
@@ -58,15 +61,15 @@ const Pairing = ({ onPairingComplete }) => {
     fetchSessionId();
   }, []);
 
-  const startWebRTC = () => {
+  const startWebRTC = (ws) => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
     pc.onicecandidate = (event) => {
-      if (event.candidate && webSocket) {
+      if (event.candidate) {
         console.log("Sending ICE candidate:", event.candidate);
-        webSocket.send(JSON.stringify({ type: "candidate", candidate: event.candidate }));
+        ws.send(JSON.stringify({ type: "candidate", candidate: event.candidate }));
       }
     };
 
@@ -82,7 +85,7 @@ const Pairing = ({ onPairingComplete }) => {
       .then((offer) => {
         console.log("Created WebRTC offer:", offer);
         pc.setLocalDescription(offer);
-        webSocket.send(JSON.stringify({ type: "offer", offer }));
+        ws.send(JSON.stringify({ type: "offer", offer }));
       })
       .catch((error) => {
         console.error("Failed to create WebRTC offer:", error);
