@@ -27,7 +27,7 @@ const SPREADSHEET_ID = "1i3Z9ACsSaOypzC7TZv_JLTvcwJfKAKh0jTpSdjcubLU";
 
 // Health Check Endpoint (Optional)
 app.get("/", (req, res) => {
-  res.send("Backend is running.");
+  res.send("Backend and WebSocket Server is running.");
 });
 
 // Endpoint to generate a new session
@@ -101,11 +101,12 @@ app.post("/append-row", async (req, res) => {
   }
 });
 
-// WebSocket Server Setup
+// Start Express Server and WebSocket Server on the same port
 const server = app.listen(5000, () => {
   console.log(`Server running on http://localhost:5000`);
 });
 
+// WebSocket Server Setup
 const wss = new WebSocket.Server({ server });
 
 // Handle WebSocket Connections
@@ -121,7 +122,28 @@ wss.on("connection", (ws, req) => {
   console.log(`WebSocket connected for session ${sessionId}`);
 
   ws.on("message", (message) => {
-    console.log(`Message from session ${sessionId}:`, message);
+    const data = JSON.parse(message);
+    console.log(`Message from session ${sessionId}:`, data);
+
+    if (data.type === "register") {
+      sessions[data.sessionId] = ws;
+      console.log(`Session registered: ${data.sessionId}`);
+    } else if (data.type === "join") {
+      const hostSocket = sessionConnections[data.sessionId];
+      if (hostSocket) {
+        console.log(`Mobile joined session: ${data.sessionId}`);
+        hostSocket.send(JSON.stringify({ type: "joined", sessionId: data.sessionId }));
+        ws.send(JSON.stringify({ type: "joined", sessionId: data.sessionId }));
+        hostSocket.partnerSocket = ws;
+        ws.partnerSocket = hostSocket;
+      } else {
+        ws.send(JSON.stringify({ type: "error", message: "Session not found" }));
+      }
+    } else if (data.type === "offer" || data.type === "answer") {
+      if (ws.partnerSocket) {
+        ws.partnerSocket.send(JSON.stringify(data));
+      }
+    }
   });
 
   ws.on("close", () => {
@@ -147,4 +169,4 @@ app.post("/send-instructions", (req, res) => {
 
   sendInstructions(session, instructions);
   res.json({ message: "Instructions sent" });
-});
+}); 
