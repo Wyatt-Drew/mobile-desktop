@@ -32,14 +32,16 @@ const Pairing = ({ onPairingComplete }) => {
             const data = JSON.parse(event.data);
             console.log("Message received from WebSocket:", data);
 
-            if (data.type === "joined") {
+            if (data.type === "paired") {
+              console.log("Pairing complete!");
+              setPairingStatus("paired");
+              onPairingComplete(); // Notify parent to transition to the next phase
+            } else if (data.type === "joined") {
               console.log("Mobile joined session. Starting WebRTC...");
               startWebRTC(ws);
             } else if (data.type === "answer") {
               console.log("Received WebRTC answer:", data.answer);
               peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-              setPairingStatus("paired");
-              onPairingComplete(peerConnection);
             }
           } catch (error) {
             console.error("Error processing WebSocket message:", error);
@@ -107,7 +109,9 @@ const Pairing = ({ onPairingComplete }) => {
             fgColor="#000000"
             includeMargin={true}
           />
-          <p>{pairingStatus === "waiting" ? "Waiting for pairing..." : "Paired successfully!"}</p>
+          <p>
+            {pairingStatus === "waiting" ? "Waiting for pairing..." : "Paired successfully!"}
+          </p>
         </div>
       ) : (
         <p>Generating QR code...</p>
