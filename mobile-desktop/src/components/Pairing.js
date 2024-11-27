@@ -13,29 +13,45 @@ const Pairing = ({ onPairingComplete }) => {
       try {
         const response = await fetch("https://mobile-backend-74th.onrender.com/generate-session");
         const { sessionId } = await response.json();
+        console.log("Fetched session ID:", sessionId); // Debug log
         setSessionId(sessionId);
 
         // Initialize WebSocket with session ID
-        const ws = new WebSocket(`wss://https://mobile-backend-74th.onrender.com/?session=${sessionId}`);
+        const ws = new WebSocket(`wss://mobile-backend-74th.onrender.com/?session=${sessionId}`);
         setWebSocket(ws);
 
-        ws.onopen = () => console.log("WebSocket connected");
+        ws.onopen = () => {
+          console.log("WebSocket connected for session:", sessionId);
+        };
 
         ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          if (data.type === "joined") {
-            startWebRTC();
-          } else if (data.type === "answer") {
-            peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-            setPairingStatus("paired");
-            onPairingComplete(peerConnection);
+          try {
+            const data = JSON.parse(event.data);
+            console.log("Message received from WebSocket:", data);
+
+            if (data.type === "joined") {
+              console.log("Mobile joined session. Starting WebRTC...");
+              startWebRTC();
+            } else if (data.type === "answer") {
+              console.log("Received WebRTC answer:", data.answer);
+              peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+              setPairingStatus("paired");
+              onPairingComplete(peerConnection);
+            }
+          } catch (error) {
+            console.error("Error processing WebSocket message:", error);
           }
         };
 
-        ws.onclose = () => console.log("WebSocket closed");
-        ws.onerror = (err) => console.error("WebSocket error:", err);
+        ws.onclose = (event) => {
+          console.log("WebSocket closed:", event.code, event.reason);
+        };
+
+        ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+        };
       } catch (error) {
-        console.error("Failed to fetch session ID:", error);
+        console.error("Failed to fetch session ID or initialize WebSocket:", error);
       }
     };
 
@@ -49,20 +65,28 @@ const Pairing = ({ onPairingComplete }) => {
 
     pc.onicecandidate = (event) => {
       if (event.candidate && webSocket) {
+        console.log("Sending ICE candidate:", event.candidate);
         webSocket.send(JSON.stringify({ type: "candidate", candidate: event.candidate }));
       }
     };
 
     const dataChannel = pc.createDataChannel("dataChannel");
-    dataChannel.onopen = () => console.log("Data channel open");
-    dataChannel.onmessage = (e) => console.log("Message from mobile:", e.data);
+    dataChannel.onopen = () => {
+      console.log("WebRTC data channel is open");
+    };
+    dataChannel.onmessage = (event) => {
+      console.log("Message received via data channel:", event.data);
+    };
 
     pc.createOffer()
       .then((offer) => {
+        console.log("Created WebRTC offer:", offer);
         pc.setLocalDescription(offer);
         webSocket.send(JSON.stringify({ type: "offer", offer }));
       })
-      .catch((err) => console.error("Failed to create WebRTC offer:", err));
+      .catch((error) => {
+        console.error("Failed to create WebRTC offer:", error);
+      });
 
     setPeerConnection(pc);
   };
