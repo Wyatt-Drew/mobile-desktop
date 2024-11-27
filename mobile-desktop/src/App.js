@@ -21,6 +21,7 @@ const targetTable = {
 
 const App = () => {
   const [state, setState] = useState("pairing");
+  const [webSocket, setWebSocket] = useState(null);
   const [peerConnection, setPeerConnection] = useState(null);
   const [subjectID, setSubjectID] = useState("");
   const [targets, setTargets] = useState([]);
@@ -57,8 +58,8 @@ const App = () => {
     }
   };
 
-  const handlePairingComplete = (pc) => {
-    setPeerConnection(pc);
+  const handlePairingComplete = (ws) => {
+    setWebSocket(ws); // Save WebSocket reference
     nextState();
   };
 
@@ -109,8 +110,10 @@ const App = () => {
   return (
     <div>
       {state === "pairing" && <Pairing onPairingComplete={handlePairingComplete} />}
-      {state === "subject-entry" && <SubjectEntry onSubmit={handleSubjectEntry} error={error} />}
-      {state === "start-screen" && <StartScreen onBegin={nextState} />}
+      {state === "subject-entry" && (
+        <SubjectEntry onSubmit={handleSubjectEntry} error={error} />
+      )}
+      {state === "start-screen" && <StartScreen onBegin={nextState} webSocket={webSocket} />}
       {state === "countdown" && <Countdown onComplete={nextState} />}
       {state === "target-display" && (
         <TargetDisplay
