@@ -73,7 +73,7 @@ const Pairing = ({ onPairingComplete }) => {
       {sessionId ? (
         <div style={styles.qrWrapper}>
           <QRCodeCanvas
-            value={`https://your-frontend-domain.com/pair?session=${sessionId}`}
+            value={`https://wyatt-drew.github.io/mobile-desktop/pair?session=${sessionId}`}
             size={200}
             level="H"
             bgColor="#ffffff"
