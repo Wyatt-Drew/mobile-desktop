@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { v4: uuidv4 } = require("uuid");
 const { google } = require("googleapis");
+const WebSocket = require("ws");
 const credentials = require("./mobile-dev-experiment-ff2e23e2fde6.json");
 
 const app = express();
@@ -10,7 +11,8 @@ app.use(cors());
 app.use(express.json());
 
 // In-memory store for session states
-const sessions = {};
+const sessions = {}; // Store session data
+const sessionConnections = {}; // Store WebSocket connections per session
 
 // Google Sheets setup
 const auth = new google.auth.JWT(
@@ -32,7 +34,7 @@ app.get("/", (req, res) => {
 app.get("/generate-session", (req, res) => {
   try {
     const sessionId = uuidv4();
-    sessions[sessionId] = { paired: false };
+    sessions[sessionId] = { paired: false, instructions: [] };
     console.log(`Session created: ${sessionId}`);
     res.json({ sessionId });
   } catch (error) {
@@ -99,8 +101,50 @@ app.post("/append-row", async (req, res) => {
   }
 });
 
-// Start server
-const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// WebSocket Server Setup
+const server = app.listen(5000, () => {
+  console.log(`Server running on http://localhost:5000`);
+});
+
+const wss = new WebSocket.Server({ server });
+
+// Handle WebSocket Connections
+wss.on("connection", (ws, req) => {
+  const sessionId = req.url.split("?session=")[1]; // Extract session ID from query
+  if (!sessionId || !sessions[sessionId]) {
+    ws.close(); // Close connection if session ID is invalid
+    return;
+  }
+
+  sessionConnections[sessionId] = ws; // Store connection
+
+  console.log(`WebSocket connected for session ${sessionId}`);
+
+  ws.on("message", (message) => {
+    console.log(`Message from session ${sessionId}:`, message);
+  });
+
+  ws.on("close", () => {
+    console.log(`WebSocket closed for session ${sessionId}`);
+    delete sessionConnections[sessionId];
+  });
+});
+
+// Function to send instructions to a session
+const sendInstructions = (sessionId, instructions) => {
+  const ws = sessionConnections[sessionId];
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ instructions }));
+  }
+};
+
+// Endpoint to send instructions to a session
+app.post("/send-instructions", (req, res) => {
+  const { session, instructions } = req.body;
+  if (!session || !sessions[session]) {
+    return res.status(404).json({ error: "Session not found" });
+  }
+
+  sendInstructions(session, instructions);
+  res.json({ message: "Instructions sent" });
 });

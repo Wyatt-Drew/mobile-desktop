@@ -1,67 +1,69 @@
 import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import axios from "axios";
-import "./App.css";
 
-const Pairing = ({ onNext }) => {
-  const [sessionId, setSessionId] = useState(null);
-  const [pairingStatus, setPairingStatus] = useState("waiting"); // "waiting" | "paired" | "error"
+const Pairing = () => {
+  const [offer, setOffer] = useState(null);
 
   useEffect(() => {
-    // Generate a dynamic session ID or fetch it from the backend
-    const generateSessionId = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/generate-session");
-        setSessionId(response.data.sessionId);
-      } catch (error) {
-        console.error("Failed to generate session ID:", error);
-        setPairingStatus("error");
-      }
+    // Create a dynamic pairing value
+    const pairingData = {
+      sessionId: "abc123", // Replace with your session logic
+      timestamp: new Date().toISOString(),
     };
 
-    generateSessionId();
+    const encodedData = JSON.stringify(pairingData); // Convert to JSON string
+    setOffer(encodedData); // Set the QR code content
   }, []);
 
-  useEffect(() => {
-    // Poll the backend to check if the session has been paired
-    const interval = setInterval(async () => {
-      if (sessionId) {
-        try {
-          const response = await axios.get(
-            `http://localhost:5000/check-pairing?session=${sessionId}`
-          );
-          if (response.data.paired) {
-            setPairingStatus("paired");
-            clearInterval(interval); // Stop polling
-            onNext(); // Proceed to the next step
-          }
-        } catch (error) {
-          console.error("Error checking pairing:", error);
-          setPairingStatus("error");
-        }
-      }
-    }, 2000); // Poll every 2 seconds
-
-    return () => clearInterval(interval);
-  }, [sessionId, onNext]);
-
-  if (!sessionId) {
-    return <p>Loading QR code...</p>;
-  }
-
-  const pairingURL = `https://example.com/pair?session=${sessionId}`;
-
   return (
-    <div className="App">
-      <h1>Scan to Pair</h1>
-      <QRCodeCanvas value={pairingURL} className="qr-code" size={200} />
-      {pairingStatus === "waiting" && <p>Waiting for device to pair...</p>}
-      {pairingStatus === "paired" && <p>Device paired successfully!</p>}
-      {pairingStatus === "error" && (
-        <p>Error pairing device. Please try again.</p>
+    <div style={styles.container}>
+      <h1 style={styles.title}>Scan to Pair</h1>
+      {offer ? (
+        <div style={styles.qrWrapper}>
+          <QRCodeCanvas
+            value={offer}
+            size={250}
+            level="H"
+            bgColor="#ffffff"
+            fgColor="#000000"
+            includeMargin={true}
+          />
+          <p style={styles.debugText}>Scan the QR code to pair with the app.</p>
+        </div>
+      ) : (
+        <p style={styles.debugText}>Generating QR code...</p>
       )}
     </div>
   );
+};
+
+const styles = {
+  container: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    textAlign: "center",
+  },
+  title: {
+    fontSize: "24px",
+    marginBottom: "20px",
+  },
+  qrWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "15px",
+    backgroundColor: "#ffffff",
+    borderRadius: "10px",
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+  },
+  debugText: {
+    fontSize: "14px",
+    marginTop: "10px",
+    color: "#555",
+  },
 };
 
 export default Pairing;
