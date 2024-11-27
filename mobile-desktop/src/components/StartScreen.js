@@ -22,9 +22,6 @@ const StartScreen = ({ onBegin, webSocket }) => {
   return (
     <div className="App">
       <h1>Welcome to the Study</h1>
-      <button className="action-button" onClick={onBegin}>
-        Begin (Manual)
-      </button>
     </div>
   );
 };
