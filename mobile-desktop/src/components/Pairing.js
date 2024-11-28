@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { createMessageHandler } from "./utils/messageHandler"; // Import reusable handler
+import { createMessageHandler } from "./utils/createMessageHandler"; // Import reusable handler
 
 const Pairing = ({ onPairingComplete }) => {
   const [sessionId, setSessionId] = useState(null);
