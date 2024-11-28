@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Pairing from "./components/Pairing";
 import SubjectEntry from "./components/SubjectEntry";
 import StartScreen from "./components/StartScreen";
@@ -22,7 +22,6 @@ const targetTable = {
 const App = () => {
   const [state, setState] = useState("pairing");
   const [webSocket, setWebSocket] = useState(null);
-  const [peerConnection, setPeerConnection] = useState(null);
   const [subjectID, setSubjectID] = useState("");
   const [targets, setTargets] = useState([]);
   const [currentPDFIndex, setCurrentPDFIndex] = useState(0);
@@ -60,6 +59,7 @@ const App = () => {
 
   const handlePairingComplete = (ws) => {
     setWebSocket(ws); // Save WebSocket reference
+    setupWebSocketHandlers(ws);
     nextState();
   };
 
@@ -75,45 +75,44 @@ const App = () => {
     }
   };
 
-  const handleNasaTLXSubmit = async (subjectId, pdf, responses) => {
-    console.log(`Submitting NASA-TLX for ${subjectId}, PDF: ${pdf}`);
-    try {
-      await appendRow("Nasa-TLX", [
-        subjectId,
-        pdf,
-        responses.mentalDemand,
-        responses.physicalDemand,
-        responses.temporalDemand,
-        responses.performance,
-        responses.effort,
-        responses.frustration,
-      ]);
-      console.log("NASA-TLX data submitted:", responses);
-    } catch (error) {
-      console.error("Failed to submit NASA-TLX data:", error);
-    }
-    nextState();
+  const setupWebSocketHandlers = (ws) => {
+    const handlers = createMessageHandler({
+      onBegin: () => setState("countdown"),
+      onTargetFound: () => nextState(),
+    });
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type && handlers[message.type]) {
+          handlers[message.type](message);
+        } else {
+          console.warn("Unhandled WebSocket message:", message);
+        }
+      } catch (error) {
+        console.error("Failed to process WebSocket message:", error);
+      }
+    };
   };
 
-  const handleOverallPreferencesSubmit = async (subjectId, landmarkStyle, { accuracy, speed, preference }) => {
-    console.log("Submitting overall preferences for:", landmarkStyle);
-    try {
-      await appendRow("Overall", [subjectId, landmarkStyle, accuracy, speed, preference]);
-      console.log(`Preferences for ${landmarkStyle} submitted successfully!`);
-    } catch (error) {
-      console.error(`Failed to submit preferences for ${landmarkStyle}:`, error);
-    }
-    setStudyComplete(true);
-    setState("complete");
-  };
+  const createMessageHandler = ({ onBegin, onTargetFound }) => ({
+    begin: () => {
+      console.log("Received 'begin' signal.");
+      onBegin();
+    },
+    targetFound: () => {
+      console.log("Received 'targetFound' signal.");
+      onTargetFound();
+    },
+  });
 
   return (
     <div>
       {state === "pairing" && <Pairing onPairingComplete={handlePairingComplete} />}
       {state === "subject-entry" && (
-        <SubjectEntry onSubmit={handleSubjectEntry} error={error} />
+        <SubjectEntry onSubmit={handleSubjectEntry} error={error} webSocket={webSocket} />
       )}
-      {state === "start-screen" && <StartScreen onBegin={nextState} webSocket={webSocket} />}
+      {state === "start-screen" && <StartScreen webSocket={webSocket} />}
       {state === "countdown" && <Countdown onComplete={nextState} />}
       {state === "target-display" && (
         <TargetDisplay
