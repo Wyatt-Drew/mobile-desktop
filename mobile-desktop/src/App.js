@@ -116,8 +116,12 @@ const App = () => {
         currentTargetIndex,
         setCurrentTargetIndex,
       });
-
+  
       webSocket.onmessage = messageHandler;
+  
+      return () => {
+        webSocket.onmessage = null; // Clean up on unmount
+      };
     }
   }, [webSocket, peerConnection]);
 
