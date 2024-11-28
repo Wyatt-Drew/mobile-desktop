@@ -8,6 +8,7 @@ import NasaTLX from "./components/NasaTLX";
 import OverallPreferences from "./components/OverallPreferences";
 import CompletionScreen from "./components/CompletionScreen";
 import { appendRow } from "./components/googleSheetsService";
+import createMessageHandler from "./utils/createMessageHandler"; // New utility
 
 const targetTable = {
   subject1: [
@@ -22,6 +23,7 @@ const targetTable = {
 const App = () => {
   const [state, setState] = useState("pairing");
   const [webSocket, setWebSocket] = useState(null);
+  const [peerConnection, setPeerConnection] = useState(null);
   const [subjectID, setSubjectID] = useState("");
   const [targets, setTargets] = useState([]);
   const [currentPDFIndex, setCurrentPDFIndex] = useState(0);
@@ -57,12 +59,6 @@ const App = () => {
     }
   };
 
-  const handlePairingComplete = (ws) => {
-    setWebSocket(ws); // Save WebSocket reference
-    setupWebSocketHandlers(ws);
-    nextState();
-  };
-
   const handleSubjectEntry = (id) => {
     const subjectKey = getSubjectKey(id);
     if (targetTable[subjectKey]) {
@@ -75,44 +71,68 @@ const App = () => {
     }
   };
 
-  const setupWebSocketHandlers = (ws) => {
-    const handlers = createMessageHandler({
-      onBegin: () => setState("countdown"),
-      onTargetFound: () => nextState(),
-    });
-
-    ws.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type && handlers[message.type]) {
-          handlers[message.type](message);
-        } else {
-          console.warn("Unhandled WebSocket message:", message);
-        }
-      } catch (error) {
-        console.error("Failed to process WebSocket message:", error);
-      }
-    };
+  const handleNasaTLXSubmit = async (subjectId, pdf, responses) => {
+    try {
+      await appendRow("Nasa-TLX", [
+        subjectId,
+        pdf,
+        responses.mentalDemand,
+        responses.physicalDemand,
+        responses.temporalDemand,
+        responses.performance,
+        responses.effort,
+        responses.frustration,
+      ]);
+      nextState();
+    } catch (error) {
+      console.error("Failed to submit NASA-TLX data:", error);
+    }
   };
 
-  const createMessageHandler = ({ onBegin, onTargetFound }) => ({
-    begin: () => {
-      console.log("Received 'begin' signal.");
-      onBegin();
-    },
-    targetFound: () => {
-      console.log("Received 'targetFound' signal.");
-      onTargetFound();
-    },
-  });
+  const handleOverallPreferencesSubmit = async (subjectId, landmarkStyle, { accuracy, speed, preference }) => {
+    try {
+      await appendRow("Overall", [subjectId, landmarkStyle, accuracy, speed, preference]);
+      setStudyComplete(true);
+      setState("complete");
+    } catch (error) {
+      console.error("Failed to submit preferences:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (webSocket) {
+      const messageHandler = createMessageHandler({
+        webSocket,
+        peerConnection,
+        setPeerConnection,
+        setState,
+        nextState,
+        setError,
+        setSubjectID,
+        setStudyComplete,
+        targets,
+        currentPDFIndex,
+        setCurrentPDFIndex,
+        currentTargetIndex,
+        setCurrentTargetIndex,
+      });
+
+      webSocket.onmessage = messageHandler;
+    }
+  }, [webSocket, peerConnection]);
+
+  const handlePairingComplete = (ws) => {
+    setWebSocket(ws);
+    nextState();
+  };
 
   return (
     <div>
       {state === "pairing" && <Pairing onPairingComplete={handlePairingComplete} />}
       {state === "subject-entry" && (
-        <SubjectEntry onSubmit={handleSubjectEntry} error={error} webSocket={webSocket} />
+        <SubjectEntry onSubmit={handleSubjectEntry} error={error} />
       )}
-      {state === "start-screen" && <StartScreen webSocket={webSocket} />}
+      {state === "start-screen" && <StartScreen onBegin={nextState} webSocket={webSocket} />}
       {state === "countdown" && <Countdown onComplete={nextState} />}
       {state === "target-display" && (
         <TargetDisplay

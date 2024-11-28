@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
+import { createMessageHandler } from "./utils/messageHandler"; // Import reusable handler
 
 const Pairing = ({ onPairingComplete }) => {
   const [sessionId, setSessionId] = useState(null);
@@ -8,60 +9,53 @@ const Pairing = ({ onPairingComplete }) => {
   const [pairingStatus, setPairingStatus] = useState("waiting");
 
   useEffect(() => {
-    const fetchSessionId = async () => {
+    const initializeSession = async () => {
       try {
-        // Fetch session ID from backend
+        // Step 1: Fetch session ID
         const response = await fetch("https://mobile-backend-74th.onrender.com/generate-session");
         const { sessionId } = await response.json();
-        console.log("Fetched session ID:", sessionId); // Log session ID for debugging
+        console.log("Fetched session ID:", sessionId);
         setSessionId(sessionId);
 
-        // Initialize WebSocket after session ID is set
+        // Step 2: Set up WebSocket connection
         const wsUrl = `wss://mobile-backend-74th.onrender.com/?session=${sessionId}`;
-        console.log("Initializing WebSocket with URL:", wsUrl);
         const ws = new WebSocket(wsUrl);
         setWebSocket(ws);
 
-        // WebSocket event handlers
-        ws.onopen = () => {
-          console.log("WebSocket connected for session:", sessionId);
-        };
+        // Step 3: Set up WebSocket message handler
+        const messageHandler = createMessageHandler(ws, {
+          onMessage: handleWebSocketMessage,
+          onOpen: () => console.log("WebSocket connected for session:", sessionId),
+          onError: (error) => console.error("WebSocket error:", error),
+          onClose: (code, reason) => console.log("WebSocket closed:", code, reason),
+        });
 
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log("Message received from WebSocket:", data);
-
-            if (data.type === "paired") {
-              console.log("Pairing complete!");
-              setPairingStatus("paired");
-              onPairingComplete(); // Notify parent to transition to the next phase
-            } else if (data.type === "joined") {
-              console.log("Mobile joined session. Starting WebRTC...");
-              startWebRTC(ws);
-            } else if (data.type === "answer") {
-              console.log("Received WebRTC answer:", data.answer);
-              peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-            }
-          } catch (error) {
-            console.error("Error processing WebSocket message:", error);
-          }
-        };
-
-        ws.onclose = (event) => {
-          console.log("WebSocket closed:", event.code, event.reason);
-        };
-
-        ws.onerror = (error) => {
-          console.error("WebSocket error:", error);
-        };
+        return () => messageHandler.cleanup(); // Clean up WebSocket on unmount
       } catch (error) {
-        console.error("Failed to fetch session ID or initialize WebSocket:", error);
+        console.error("Failed to initialize session:", error);
       }
     };
 
-    fetchSessionId();
+    initializeSession();
   }, []);
+
+  const handleWebSocketMessage = (data) => {
+    console.log("Message received from WebSocket:", data);
+
+    if (data.type === "paired") {
+      console.log("Pairing complete!");
+      setPairingStatus("paired");
+      onPairingComplete(); // Notify parent to transition to the next phase
+    } else if (data.type === "joined") {
+      console.log("Mobile joined session. Starting WebRTC...");
+      startWebRTC(webSocket);
+    } else if (data.type === "answer") {
+      console.log("Received WebRTC answer:", data.answer);
+      if (peerConnection) {
+        peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      }
+    }
+  };
 
   const startWebRTC = (ws) => {
     const pc = new RTCPeerConnection({
@@ -109,9 +103,7 @@ const Pairing = ({ onPairingComplete }) => {
             fgColor="#000000"
             includeMargin={true}
           />
-          <p>
-            {pairingStatus === "waiting" ? "Waiting for pairing..." : "Paired successfully!"}
-          </p>
+          <p>{pairingStatus === "waiting" ? "Waiting for pairing..." : "Paired successfully!"}</p>
         </div>
       ) : (
         <p>Generating QR code...</p>
