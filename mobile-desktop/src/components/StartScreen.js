@@ -9,17 +9,11 @@ const StartScreen = ({ onBegin }) => {
     // Generate a local ID for the PeerJS instance
     const generatedId = uuidv4();
 
-    // Initialize PeerJS with the generated ID
-    const peerInstance = new Peer({
-      host: "mobile-backend-74th.onrender.com", // Your backend PeerJS server
-      port: 443, // HTTPS port
-      path: "/peerjs", // Correct PeerJS signaling path
-      secure: true, // Use HTTPS
-    });
-    
+    // Initialize PeerJS (using default signaling server)
+    const peerInstance = new Peer();
 
     peerInstance.on("open", (id) => {
-      console.log("PeerJS ID generated locally:", id);
+      console.log("PeerJS ID generated:", id);
       setPeerId(id); // Save the generated ID to display
     });
 
