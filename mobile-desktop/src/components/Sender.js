@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from "react";
+import { QRCodeCanvas } from "qrcode.react";
 
 const Sender = () => {
-  const [sessionId, setSessionId] = useState(""); // Session ID
-  const [ws, setWs] = useState(null); // WebSocket connection
-  const [status, setStatus] = useState("Initializing..."); // Status message
-  const [inputMessage, setInputMessage] = useState(""); // Input for messages
-  const [messages, setMessages] = useState([]); // Message log
-  const [currentState, setCurrentState] = useState("home"); // State for dynamic pages
+  const [sessionId, setSessionId] = useState("");
+  const [ws, setWs] = useState(null);
+  const [status, setStatus] = useState("Initializing...");
+  const [inputMessage, setInputMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [currentState, setCurrentState] = useState("home");
 
-  // Generate session ID and auto-connect on mount
   useEffect(() => {
-    let isMounted = true; // Track component mount status
+    let isMounted = true;
+
     fetch("https://mobile-backend-74th.onrender.com/generate-session")
       .then((response) => response.json())
       .then((data) => {
         if (isMounted) {
           setSessionId(data.sessionId);
           setStatus(`Generated Session ID: ${data.sessionId}`);
-          autoConnect(data.sessionId); // Auto-connect after generating session ID
+          autoConnect(data.sessionId);
         }
       })
       .catch((err) => {
@@ -26,12 +27,12 @@ const Sender = () => {
       });
 
     return () => {
-      isMounted = false; // Prevent state updates after unmount
+      isMounted = false;
     };
   }, []);
 
   const autoConnect = (sessionId) => {
-    if (ws) return; // Prevent multiple connections
+    if (ws) return;
 
     const socket = new WebSocket("wss://mobile-backend-74th.onrender.com");
 
@@ -49,9 +50,8 @@ const Sender = () => {
     socket.onmessage = (event) => {
       const { sender, message, type } = JSON.parse(event.data);
 
-      // Handle different message types
       if (type === "changeState") {
-        setCurrentState(message); // Update the state dynamically
+        setCurrentState(message);
       } else {
         setMessages((prev) => [...prev, `${sender}: ${message}`]);
       }
@@ -76,25 +76,20 @@ const Sender = () => {
     }
   };
 
-  // Render content dynamically based on `currentState`
-  const renderContent = () => {
-    switch (currentState) {
-      case "home":
-        return <p>Welcome to the home page. Use the input below to send a message.</p>;
-      case "page1":
-        return <p>You are now on Page 1!</p>;
-      case "page2":
-        return <p>You are now on Page 2!</p>;
-      default:
-        return <p>Unknown state: {currentState}</p>;
-    }
-  };
-
   return (
     <div className="sender">
       <h2>Sender</h2>
       <p>{status}</p>
-      <div>{renderContent()}</div>
+      {sessionId && (
+        <div style={{ margin: "20px" }}>
+          <p>Scan this QR Code to connect:</p>
+          <QRCodeCanvas value={sessionId} size={200} />
+        </div>
+      )}
+      <div>
+        <h3>Dynamic Content:</h3>
+        <p>{currentState === "home" ? "Welcome to the home page." : `State: ${currentState}`}</p>
+      </div>
       {ws && (
         <>
           <input
