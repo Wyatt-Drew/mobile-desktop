@@ -14,6 +14,8 @@ const Sender = () => {
   const [status, setStatus] = useState("Generating QR code...");
   const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [subjectId, setSubjectId] = useState("");
+  const [inputMessage, setInputMessage] = useState("");
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     console.log("useEffect triggered to fetch session ID."); // Debugging log
@@ -77,6 +79,21 @@ const Sender = () => {
     socket.onerror = (err) => console.error("WebSocket error:", err);
   };
 
+  const sendMessage = () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(
+        JSON.stringify({
+          type: "message",
+          sessionId,
+          sender: "Sender",
+          message: inputMessage,
+        })
+      );
+      setMessages((prev) => [...prev, `Self: ${inputMessage}`]);
+      setInputMessage("");
+    }
+  };
+
   const sendSubjectId = () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       const subjectMessage = {
@@ -96,12 +113,29 @@ const Sender = () => {
     <div style={styles.container}>
       {currentScreen === SCREENS.QR_CODE && (
         <div style={styles.screen1}>
+                  {ws && (
+        <>
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Enter a message..."
+          />
+          <button onClick={sendMessage}>Send</button>
+        </>
+      )}
+      <div className="messages">
+        {messages.map((msg, index) => (
+          <div key={index}>{msg}</div>
+        ))}
+      </div>
           <div style={styles.qrWrapper}>
             {sessionId ? (
               <>
                 <QRCodeCanvas value={sessionId} size={200} />
                 <p style={styles.status}>{status}</p>
                 <p>Scan this QR Code to connect:</p>
+                
               </>
             ) : (
               <p style={styles.status}>Generating QR Code...</p>
