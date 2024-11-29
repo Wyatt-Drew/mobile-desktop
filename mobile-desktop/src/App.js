@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Pairing from "./components/Pairing";
 import SubjectEntry from "./components/SubjectEntry";
 import StartScreen from "./components/StartScreen";
@@ -8,7 +8,7 @@ import NasaTLX from "./components/NasaTLX";
 import OverallPreferences from "./components/OverallPreferences";
 import CompletionScreen from "./components/CompletionScreen";
 import { appendRow } from "./components/googleSheetsService";
-import createMessageHandler from "./utils/createMessageHandler"; // New utility
+import SimplePeer from "simple-peer";
 
 const targetTable = {
   subject1: [
@@ -22,16 +22,14 @@ const targetTable = {
 
 const App = () => {
   const [state, setState] = useState("pairing");
+  const [peer, setPeer] = useState(null);
   const [webSocket, setWebSocket] = useState(null);
-  const [peerConnection, setPeerConnection] = useState(null);
   const [subjectID, setSubjectID] = useState("");
   const [targets, setTargets] = useState([]);
   const [currentPDFIndex, setCurrentPDFIndex] = useState(0);
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [studyComplete, setStudyComplete] = useState(false);
   const [error, setError] = useState("");
-
-  const getSubjectKey = (input) => (!isNaN(input) ? `subject${input}` : input.trim());
 
   const nextState = () => {
     if (state === "pairing") setState("subject-entry");
@@ -60,7 +58,7 @@ const App = () => {
   };
 
   const handleSubjectEntry = (id) => {
-    const subjectKey = getSubjectKey(id);
+    const subjectKey = `subject${id}`;
     if (targetTable[subjectKey]) {
       setSubjectID(subjectKey);
       setTargets(targetTable[subjectKey]);
@@ -71,62 +69,48 @@ const App = () => {
     }
   };
 
-  const handleNasaTLXSubmit = async (subjectId, pdf, responses) => {
-    try {
-      await appendRow("Nasa-TLX", [
-        subjectId,
-        pdf,
-        responses.mentalDemand,
-        responses.physicalDemand,
-        responses.temporalDemand,
-        responses.performance,
-        responses.effort,
-        responses.frustration,
-      ]);
-      nextState();
-    } catch (error) {
-      console.error("Failed to submit NASA-TLX data:", error);
-    }
-  };
+  const setupSimplePeer = (initiator, ws) => {
+    const newPeer = new SimplePeer({
+      initiator,
+      trickle: false,
+    });
 
-  const handleOverallPreferencesSubmit = async (subjectId, landmarkStyle, { accuracy, speed, preference }) => {
-    try {
-      await appendRow("Overall", [subjectId, landmarkStyle, accuracy, speed, preference]);
-      setStudyComplete(true);
-      setState("complete");
-    } catch (error) {
-      console.error("Failed to submit preferences:", error);
-    }
+    newPeer.on("signal", (data) => {
+      ws.send(JSON.stringify({ type: "signal", data }));
+    });
+
+    newPeer.on("connect", () => {
+      console.log("Peer connected!");
+      setPeer(newPeer);
+    });
+
+    newPeer.on("data", (data) => {
+      console.log("Received data:", data.toString());
+    });
+
+    newPeer.on("error", (err) => console.error("Peer error:", err));
+
+    setPeer(newPeer);
   };
 
   useEffect(() => {
     if (webSocket) {
-      const messageHandler = createMessageHandler({
-        webSocket,
-        peerConnection,
-        setPeerConnection,
-        setState,
-        nextState,
-        setError,
-        setSubjectID,
-        setStudyComplete,
-        targets,
-        currentPDFIndex,
-        setCurrentPDFIndex,
-        currentTargetIndex,
-        setCurrentTargetIndex,
-      });
-  
-      webSocket.onmessage = messageHandler;
-  
+      webSocket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === "signal" && peer) {
+          peer.signal(message.data);
+        }
+      };
+
       return () => {
-        webSocket.onmessage = null; // Clean up on unmount
+        webSocket.close();
       };
     }
-  }, [webSocket, peerConnection]);
+  }, [webSocket, peer]);
 
-  const handlePairingComplete = (ws) => {
+  const handlePairingComplete = (ws, isInitiator) => {
     setWebSocket(ws);
+    setupSimplePeer(isInitiator, ws);
     nextState();
   };
 
@@ -136,7 +120,7 @@ const App = () => {
       {state === "subject-entry" && (
         <SubjectEntry onSubmit={handleSubjectEntry} error={error} />
       )}
-      {state === "start-screen" && <StartScreen onBegin={nextState} webSocket={webSocket} />}
+      {state === "start-screen" && <StartScreen onBegin={nextState} />}
       {state === "countdown" && <Countdown onComplete={nextState} />}
       {state === "target-display" && (
         <TargetDisplay
@@ -150,11 +134,11 @@ const App = () => {
         <NasaTLX
           subjectId={subjectID}
           pdf={targets[currentPDFIndex]?.pdf}
-          onSubmit={handleNasaTLXSubmit}
+          onSubmit={appendRow}
         />
       )}
       {state === "overall-preferences" && (
-        <OverallPreferences subjectId={subjectID} onSubmit={handleOverallPreferencesSubmit} />
+        <OverallPreferences subjectId={subjectID} onSubmit={appendRow} />
       )}
       {studyComplete && <CompletionScreen />}
     </div>
