@@ -3,20 +3,23 @@ import React, { useState, useEffect } from "react";
 const Receiver = () => {
   const [sessionId, setSessionId] = useState("");
   const [ws, setWs] = useState(null);
-  const [status, setStatus] = useState("Awaiting connection...");
-  const [messages, setMessages] = useState([]);
+  const [status, setStatus] = useState("Enter Session Code to Connect");
   const [inputMessage, setInputMessage] = useState("");
+  const [messages, setMessages] = useState([]);
 
-  useEffect(() => {
+  const connect = () => {
+    if (!sessionId) {
+      setStatus("Please enter a valid session code.");
+      return;
+    }
     const socket = new WebSocket("wss://mobile-backend-74th.onrender.com");
     socket.onopen = () => {
       setWs(socket);
-      setStatus("Connected to session.");
-      // Register as a receiver
+      setStatus(`Connected to session: ${sessionId}`);
       socket.send(
         JSON.stringify({
           type: "register",
-          sessionId, // Assume the user provides a session ID
+          sessionId,
         })
       );
     };
@@ -26,9 +29,7 @@ const Receiver = () => {
     };
     socket.onclose = () => setStatus("Disconnected");
     socket.onerror = (err) => console.error("WebSocket error:", err);
-
-    return () => socket.close(); // Clean up on unmount
-  }, [sessionId]);
+  };
 
   const sendMessage = () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
@@ -50,10 +51,11 @@ const Receiver = () => {
       <h2>Receiver</h2>
       <input
         type="text"
-        placeholder="Enter Session ID"
+        placeholder="Enter Session Code"
         value={sessionId}
         onChange={(e) => setSessionId(e.target.value)}
       />
+      <button onClick={connect}>Connect</button>
       <p>Status: {status}</p>
       <input
         type="text"
