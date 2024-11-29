@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Pairing from "./components/Pairing";
 import SubjectEntry from "./components/SubjectEntry";
 import StartScreen from "./components/StartScreen";
@@ -8,7 +8,7 @@ import NasaTLX from "./components/NasaTLX";
 import OverallPreferences from "./components/OverallPreferences";
 import CompletionScreen from "./components/CompletionScreen";
 import { appendRow } from "./components/googleSheetsService";
-import SimplePeer from "simple-peer";
+import Peer from "peerjs";
 
 const targetTable = {
   subject1: [
@@ -23,7 +23,8 @@ const targetTable = {
 const App = () => {
   const [state, setState] = useState("pairing");
   const [peer, setPeer] = useState(null);
-  const [webSocket, setWebSocket] = useState(null);
+  const [connection, setConnection] = useState(null);
+  const [peerId, setPeerId] = useState(null);
   const [subjectID, setSubjectID] = useState("");
   const [targets, setTargets] = useState([]);
   const [currentPDFIndex, setCurrentPDFIndex] = useState(0);
@@ -69,54 +70,51 @@ const App = () => {
     }
   };
 
-  const setupSimplePeer = (initiator, ws) => {
-    const newPeer = new SimplePeer({
-      initiator,
-      trickle: false,
-    });
-
-    newPeer.on("signal", (data) => {
-      ws.send(JSON.stringify({ type: "signal", data }));
-    });
-
-    newPeer.on("connect", () => {
-      console.log("Peer connected!");
-      setPeer(newPeer);
-    });
-
-    newPeer.on("data", (data) => {
-      console.log("Received data:", data.toString());
-    });
-
-    newPeer.on("error", (err) => console.error("Peer error:", err));
-
-    setPeer(newPeer);
-  };
-
   useEffect(() => {
-    if (webSocket) {
-      webSocket.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        if (message.type === "signal" && peer) {
-          peer.signal(message.data);
-        }
-      };
+    // Initialize PeerJS and retrieve peer ID
+    const peerInstance = new Peer({
+      host: "0.peerjs.com", // Default PeerJS signaling server
+      port: 443, // HTTPS
+      secure: true, // Ensure secure connection
+    });
 
-      return () => {
-        webSocket.close();
-      };
-    }
-  }, [webSocket, peer]);
+    peerInstance.on("open", (id) => {
+      console.log("PeerJS ID:", id);
+      setPeerId(id); // Save the generated ID
+    });
 
-  const handlePairingComplete = (ws, isInitiator) => {
-    setWebSocket(ws);
-    setupSimplePeer(isInitiator, ws);
-    nextState();
-  };
+    peerInstance.on("connection", (conn) => {
+      console.log("Mobile peer connected:", conn.peer);
+      setConnection(conn);
+
+      conn.on("data", (data) => {
+        console.log("Received data from desktop:", data);
+      });
+
+      conn.on("open", () => {
+        console.log("Connection with desktop peer is open!");
+        nextState(); // Transition to the next state
+      });
+
+      conn.on("error", (err) => {
+        console.error("Connection error:", err);
+      });
+    });
+
+    peerInstance.on("error", (err) => {
+      console.error("PeerJS error:", err);
+    });
+
+    setPeer(peerInstance);
+
+    return () => {
+      peerInstance.destroy(); // Clean up on unmount
+    };
+  }, []);
 
   return (
     <div>
-      {state === "pairing" && <Pairing onPairingComplete={handlePairingComplete} />}
+      {state === "pairing" && <Pairing peerId={peerId} />}
       {state === "subject-entry" && (
         <SubjectEntry onSubmit={handleSubjectEntry} error={error} />
       )}
