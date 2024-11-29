@@ -42,11 +42,11 @@ const Pairing = ({ onPairingComplete }) => {
 
   const handleWebSocketMessage = (data) => {
     console.log("Message received from WebSocket:", data);
-
+  
     if (data.type === "paired") {
       console.log("Pairing complete!");
       setPairingStatus("paired");
-      onPairingComplete(); // Notify parent to transition to the next phase
+      onPairingComplete(webSocket); // Pass WebSocket to the parent App
     } else if (data.type === "joined") {
       console.log("Mobile joined session. Starting WebRTC...");
       startWebRTC(webSocket);
