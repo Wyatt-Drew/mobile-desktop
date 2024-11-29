@@ -1,37 +1,45 @@
-import React, { useEffect, useState } from "react";
-import Peer from "peerjs";
+import React, { useState, useEffect } from "react";
 
 const Receiver = () => {
-  const [peer, setPeer] = useState(null);
-  const [conn, setConn] = useState(null);
-  const [peerId, setPeerId] = useState("");
+  const [sessionId, setSessionId] = useState("");
+  const [ws, setWs] = useState(null);
   const [status, setStatus] = useState("Awaiting connection...");
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
 
   useEffect(() => {
-    const newPeer = new Peer(null, { debug: 2 });
+    const socket = new WebSocket("wss://mobile-backend-74th.onrender.com");
+    socket.onopen = () => {
+      setWs(socket);
+      setStatus("Connected to session.");
+      // Register as a receiver
+      socket.send(
+        JSON.stringify({
+          type: "register",
+          sessionId, // Assume the user provides a session ID
+        })
+      );
+    };
+    socket.onmessage = (event) => {
+      const { sender, message } = JSON.parse(event.data);
+      setMessages((prev) => [...prev, `${sender}: ${message}`]);
+    };
+    socket.onclose = () => setStatus("Disconnected");
+    socket.onerror = (err) => console.error("WebSocket error:", err);
 
-    newPeer.on("open", (id) => {
-      setPeerId(id);
-    });
-
-    newPeer.on("connection", (connection) => {
-      setConn(connection);
-      setStatus("Connected");
-      connection.on("data", (data) => {
-        setMessages((prev) => [...prev, `Peer: ${data}`]);
-      });
-    });
-
-    setPeer(newPeer);
-
-    return () => newPeer.destroy();
-  }, []);
+    return () => socket.close(); // Clean up on unmount
+  }, [sessionId]);
 
   const sendMessage = () => {
-    if (conn && conn.open) {
-      conn.send(inputMessage);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(
+        JSON.stringify({
+          type: "message",
+          sessionId,
+          sender: "Receiver",
+          message: inputMessage,
+        })
+      );
       setMessages((prev) => [...prev, `Self: ${inputMessage}`]);
       setInputMessage("");
     }
@@ -40,7 +48,12 @@ const Receiver = () => {
   return (
     <div className="receiver">
       <h2>Receiver</h2>
-      <p>ID: {peerId}</p>
+      <input
+        type="text"
+        placeholder="Enter Session ID"
+        value={sessionId}
+        onChange={(e) => setSessionId(e.target.value)}
+      />
       <p>Status: {status}</p>
       <input
         type="text"
