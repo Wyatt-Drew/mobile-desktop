@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import createMessageHandler from '../utils/createMessageHandler';
-
 
 const Pairing = ({ onPairingComplete }) => {
   const [sessionId, setSessionId] = useState(null);
   const [webSocket, setWebSocket] = useState(null);
   const [peerConnection, setPeerConnection] = useState(null);
+  const [dataChannel, setDataChannel] = useState(null);
   const [pairingStatus, setPairingStatus] = useState("waiting");
 
   useEffect(() => {
@@ -23,46 +22,63 @@ const Pairing = ({ onPairingComplete }) => {
         const ws = new WebSocket(wsUrl);
         setWebSocket(ws);
 
-        // Step 3: Set up WebSocket message handler
-        const messageHandler = createMessageHandler(ws, {
-          onMessage: handleWebSocketMessage,
-          onOpen: () => console.log("WebSocket connected for session:", sessionId),
-          onError: (error) => console.error("WebSocket error:", error),
-          onClose: (code, reason) => console.log("WebSocket closed:", code, reason),
-        });
+        // Step 3: WebSocket event handlers
+        ws.onopen = () => {
+          console.log("WebSocket connected for session:", sessionId);
+        };
 
-        return () => messageHandler.cleanup(); // Clean up WebSocket on unmount
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log("Message received from WebSocket:", data);
+
+            if (data.type === "paired") {
+              console.log("Pairing complete!");
+              setPairingStatus("paired");
+              startWebRTC(ws); // Start WebRTC once paired
+            } else if (data.type === "answer") {
+              console.log("Received WebRTC answer:", data.answer);
+              if (peerConnection) {
+                peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+              }
+            } else if (data.type === "candidate") {
+              console.log("Received ICE candidate:", data.candidate);
+              if (peerConnection) {
+                peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+              }
+            }
+          } catch (error) {
+            console.error("Error processing WebSocket message:", error);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error("WebSocket error:", error);
+        };
+
+        ws.onclose = (event) => {
+          console.log("WebSocket closed:", event.code, event.reason);
+        };
       } catch (error) {
         console.error("Failed to initialize session:", error);
       }
     };
 
     initializeSession();
-  }, []);
 
-  const handleWebSocketMessage = (data) => {
-    console.log("Message received from WebSocket:", data);
-  
-    if (data.type === "paired") {
-      console.log("Pairing complete!");
-      setPairingStatus("paired");
-      onPairingComplete(webSocket); // Pass WebSocket to the parent App
-    } else if (data.type === "joined") {
-      console.log("Mobile joined session. Starting WebRTC...");
-      startWebRTC(webSocket);
-    } else if (data.type === "answer") {
-      console.log("Received WebRTC answer:", data.answer);
-      if (peerConnection) {
-        peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-      }
-    }
-  };
+    // Cleanup WebSocket and peer connection on component unmount
+    return () => {
+      if (webSocket) webSocket.close();
+      if (peerConnection) peerConnection.close();
+    };
+  }, []);
 
   const startWebRTC = (ws) => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
+    // Handle ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         console.log("Sending ICE candidate:", event.candidate);
@@ -70,11 +86,16 @@ const Pairing = ({ onPairingComplete }) => {
       }
     };
 
-    const dataChannel = pc.createDataChannel("dataChannel");
-    dataChannel.onopen = () => {
-      console.log("WebRTC data channel is open");
+    // Create a data channel for communication
+    const dc = pc.createDataChannel("dataChannel");
+    setDataChannel(dc);
+
+    // Data channel event handlers
+    dc.onopen = () => {
+      console.log("Data channel is open");
     };
-    dataChannel.onmessage = (event) => {
+
+    dc.onmessage = (event) => {
       console.log("Message received via data channel:", event.data);
     };
 
@@ -89,6 +110,9 @@ const Pairing = ({ onPairingComplete }) => {
       });
 
     setPeerConnection(pc);
+
+    // Notify the parent that pairing and WebRTC setup are complete
+    onPairingComplete(ws, dc);
   };
 
   return (
