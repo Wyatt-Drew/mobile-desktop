@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import CustomSlider from './CustomSlider'; // Ensure the correct path
+import CustomSlider from '../components/CustomSlider'; // Ensure the correct path
 import Button from '@mui/material/Button';
 import './NasaTLX.css'; // Import the updated CSS
 

@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import Countdown from "./Countdown";
-import TargetDisplay from "./TargetDisplay";
-import NasaTLX from "./NasaTLX";
-import OverallPreferences from "./OverallPreferences";
-import CompletionScreen from "./CompletionScreen";
+import Countdown from "../pages/Countdown";
+import TargetDisplay from "../pages/TargetDisplay";
+import NasaTLX from "../pages/NasaTLX";
+import OverallPreferences from "../pages/OverallPreferences";
+import CompletionScreen from "../pages/CompletionScreen";
 
 const SCREENS = {
   QR_CODE: 1, // Display QR Code
   SUBJECT_ID: 2, // Enter Subject ID
   WELCOME: 3, // Welcome Screen
-  COUNTDOWN: 3,
-  TARGET: 3,
-  NASATLX: 3,
-  OVERALLPREFERENCES: 3,
-  COMPLETION: 3,
+  COUNTDOWN: 4,
+  TARGET: 5,
+  NASATLX: 6,
+  OVERALLPREFERENCES: 7,
+  COMPLETION: 8,
 };
 
 const Sender = () => {
@@ -132,90 +132,85 @@ const Sender = () => {
     setCurrentScreen(SCREENS.TARGET);
   };
   return (
-    <div style={styles.container}>
-      {currentScreen === SCREENS.QR_CODE && (
-        <div style={styles.screen1}>
-                  {/* {ws && (
-        <>
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Enter a message..."
-          />
-          <button onClick={() => sendMessage("custom", inputMessage)}>Send</button>
-        </>
-      )} */}
-      <div className="messages">
-        {messages.map((msg, index) => (
-          <div key={index}>{msg}</div>
-        ))}
-      </div>
-          <div style={styles.qrWrapper}>
-            {sessionId ? (
-              <>
-                <QRCodeCanvas value={sessionId} size={200} />
-                <p style={styles.status}>{status}</p>
-                <p>Scan this QR Code to connect:</p>
-                
-              </>
-            ) : (
-                <div>
+        <div style={styles.container}>
+          {currentScreen === SCREENS.QR_CODE && (
+            <div style={styles.screen1}>
+              <div className="messages">
+                {messages.map((msg, index) => (
+                  <div key={index}>{msg}</div>
+                ))}
+              </div>
+              <div style={styles.qrWrapper}>
+                {sessionId ? (
+                  <>
+                    <p style={styles.status}>Scan this QR Code to connect:</p>
+                    <QRCodeCanvas value={sessionId} size={400} />
+                    <p style={styles.status}>{status}</p>
+                  </>
+                ) : (
+                  <div>
                     <p style={styles.status}>Generating QR Code...</p>
-                    <p style={styles.status}>The backend is probably starting up right now. </p>
-                    <p style={styles.status}>That can take 50 seconds or more. </p>
-                </div>
-            )}
-          </div>
+                    <p style={styles.status}>The backend is probably starting up right now.</p>
+                    <p style={styles.status}>That can take 50 seconds or more.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+      
+          {currentScreen === SCREENS.SUBJECT_ID && (
+            <div style={styles.screen2}>
+              <p style={styles.header}>Mobile app connected!</p>
+              <input
+                type="text"
+                placeholder="Enter Subject ID"
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+                style={styles.input}
+              />
+              <button onClick={sendSubjectId} style={styles.button}>
+                Send Subject ID
+              </button>
+            </div>
+          )}
+      
+          {currentScreen === SCREENS.WELCOME && (
+            <div style={styles.screen3}>
+              <p style={styles.header}>Welcome to the study</p>
+            </div>
+          )}
+      
+          {currentScreen === SCREENS.COUNTDOWN && (
+            <div style={styles.screen3}>
+              <Countdown onComplete={handleCountdownComplete} />
+            </div>
+          )}
+      
+          {currentScreen === SCREENS.TARGET && (
+            <div style={styles.screen3}>
+              <TargetDisplay />
+            </div>
+          )}
+      
+          {currentScreen === SCREENS.NASATLX && (
+            <div style={styles.screen3}>
+              <NasaTLX />
+            </div>
+          )}
+      
+          {currentScreen === SCREENS.OVERALLPREFERENCES && (
+            <div style={styles.screen3}>
+              <OverallPreferences />
+            </div>
+          )}
+      
+          {currentScreen === SCREENS.COMPLETION && (
+            <div style={styles.screen3}>
+              <CompletionScreen />
+            </div>
+          )}
         </div>
-      )}
-      {currentScreen === SCREENS.SUBJECT_ID && (
-        <div style={styles.screen2}>
-          <p style={styles.header}>Mobile app connected!</p>
-          <input
-            type="text"
-            placeholder="Enter Subject ID"
-            value={subjectId}
-            onChange={(e) => setSubjectId(e.target.value)}
-            style={styles.input}
-          />
-          <button onClick={sendSubjectId} style={styles.button}>
-            Send Subject ID
-          </button>
-        </div>
-      )}
-      {currentScreen === SCREENS.WELCOME && (
-        <div style={styles.screen3}>
-          <p style={styles.header}>Welcome to the study</p>
-        </div>
-      )}
-        {currentScreen === SCREENS.COUNTDOWN && (
-        <div style={styles.screen3}>
-        <Countdown onComplete={handleCountdownComplete} />
-      </div>
-      )}
-        {currentScreen === SCREENS.TARGET && (
-        <div style={styles.screen3}>
-        <TargetDisplay />
-      </div>
-      )}
-        {currentScreen === SCREENS.NASATLX && (
-        <div style={styles.screen3}>
-          <NasaTLX></NasaTLX>
-        </div>
-      )}
-        {currentScreen === SCREENS.OVERALLPREFERENCES && (
-        <div style={styles.screen3}>
-          <OverallPreferences></OverallPreferences>
-        </div>
-      )}
-        {currentScreen === SCREENS.COMPLETION && (
-        <div style={styles.screen3}>
-          <CompletionScreen></CompletionScreen>
-        </div>
-      )}
-    </div>
-  );
+      );
 };
 
 export default Sender;

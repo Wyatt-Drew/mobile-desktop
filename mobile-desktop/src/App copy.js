@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import Pairing from "./components/Pairing";
 import SubjectEntry from "./components/SubjectEntry";
 import StartScreen from "./components/StartScreen";
-import Countdown from "./components/Countdown";
-import TargetDisplay from "./components/TargetDisplay";
-import NasaTLX from "./components/NasaTLX";
-import OverallPreferences from "./components/OverallPreferences";
-import CompletionScreen from "./components/CompletionScreen";
+import Countdown from "./pages/Countdown";
+import TargetDisplay from "./pages/TargetDisplay";
+import NasaTLX from "./pages/NasaTLX";
+import OverallPreferences from "./pages/OverallPreferences";
+import CompletionScreen from "./pages/CompletionScreen";
 import { appendRow } from "./components/googleSheetsService";
 
 // Define the target table with subject keys
