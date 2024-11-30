@@ -5,6 +5,8 @@ import TargetDisplay from "../pages/TargetDisplay";
 import NasaTLX from "../pages/NasaTLX";
 import OverallPreferences from "../pages/OverallPreferences";
 import CompletionScreen from "../pages/CompletionScreen";
+import { appendRow } from "./googleSheetsService";
+
 
 const targetTable = {
     subject1: [
@@ -28,6 +30,8 @@ const SCREENS = {
   COMPLETION: 8,
 };
 
+
+
 const Sender = () => {
   console.log("Sender component rendered."); // Debugging log
   const [sessionId, setSessionId] = useState("");
@@ -37,7 +41,10 @@ const Sender = () => {
   const [subjectId, setSubjectId] = useState("");
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState([]);
-
+//   
+  const [currentTargets, setCurrentTargets] = useState([]);
+  const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
+  const [currentPdfId, setCurrentPdfId] = useState(null);
 
   const imageList = [
     require('../targets/target1.png'),
@@ -97,9 +104,13 @@ const Sender = () => {
       } else if (message.type === "Begin") {
         setCurrentScreen(SCREENS.COUNTDOWN);
         console.log("Received Begin");
+    } else if (message.type === "TargetFound") {
+        console.log("Received TargetFound");
+        nextState();
     } else if (message.type === "Begin") {
         setCurrentScreen(SCREENS.COUNTDOWN);
         console.log("Received Begin");
+
       }
       
       else {
@@ -133,23 +144,81 @@ const Sender = () => {
 
   const sendSubjectId = () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
-    //   const subjectMessage = {
-    //     type: "subjectId",
-    //     sessionId,
-    //     message: subjectId,
-    //   };
-      console.log("Sending subjectId");
-    //   ws.send(JSON.stringify(subjectMessage));
-      setCurrentScreen(SCREENS.WELCOME);
-      sendMessage("subjectId",'')
+        console.log("Sending subjectId");
+        const subjectKey = `subject${subjectId}`;
+        if (targetTable[subjectKey]) {
+            const pdf = targetTable[subjectKey][0]; // Assuming the first PDF for simplicity
+            setCurrentTargets(pdf.targets);
+            setCurrentTargetIndex(0);
+            setCurrentPdfId(pdf.pdf);
+        }
+        setCurrentScreen(SCREENS.WELCOME);
+        sendMessage("subjectId", subjectId);
     } else {
-      console.error("WebSocket is not connected. Unable to send Subject ID.");
+        console.error("WebSocket is not connected. Unable to send Subject ID.");
     }
   };
   const handleCountdownComplete = () => {
     console.log("Countdown complete, transitioning to TARGET screen.");
     setCurrentScreen(SCREENS.TARGET);
   };
+
+  const handleLogPerformance = async ({ subjectId, pdfId, target, taskTime, scrollDistance, numberOfTaps }) => {
+    console.log("Logging performance data...");
+    try {
+      await appendRow("Performance", [subjectId, pdfId, target, taskTime, scrollDistance, numberOfTaps]);
+      console.log("Performance data logged successfully!");
+    } catch (error) {
+      console.error("Failed to log performance data:", error);
+    }
+  };
+
+  const handleOverallPreferencesSubmit = async (subjectId, landmarkStyle, { accuracy, speed, preference }) => {
+    console.log("Submitting overall preferences for:", landmarkStyle);
+    try {
+      await appendRow("Overall", [subjectId, landmarkStyle, accuracy, speed, preference]);
+      console.log(`Preferences for ${landmarkStyle} submitted successfully!`);
+    } catch (error) {
+      console.error(`Failed to submit preferences for ${landmarkStyle}:`, error);
+    }
+  
+    // Transition to the next state after submission
+    setCurrentScreen(SCREENS.COMPLETION);
+  };
+
+  const handleNasaTLXSubmit = async (subjectId, pdf, responses) => {
+    console.log(`Submitting NASA-TLX for ${subjectId}, PDF: ${pdf}`);
+    try {
+      // Write the responses to Google Sheets
+      await appendRow("Nasa-TLX", [
+        subjectId,
+        pdf,
+        responses.mentalDemand,
+        responses.physicalDemand,
+        responses.temporalDemand,
+        responses.performance,
+        responses.effort,
+        responses.frustration,
+      ]);
+      console.log("NASA-TLX data submitted:", responses);
+    } catch (error) {
+      console.error("Failed to submit NASA-TLX data:", error);
+    }
+
+    // Move to the next state
+    nextState();
+  };
+
+
+  const nextState = () => {
+    if (currentTargetIndex < currentTargets.length - 1) {
+        setCurrentTargetIndex((prevIndex) => prevIndex + 1);
+    } else {
+        console.log("All targets in the current PDF processed. Moving to NASATLX.");
+        setCurrentScreen(SCREENS.NASATLX);
+    }
+};
+
   return (
         <div style={styles.container}>
           {currentScreen === SCREENS.QR_CODE && (
@@ -207,7 +276,13 @@ const Sender = () => {
       
           {currentScreen === SCREENS.TARGET && (
             <div style={styles.screen3}>
-              <TargetDisplay />
+            <TargetDisplay
+                subjectId={subjectId}
+                pdfId={currentPdfId}
+                target={currentTargets[currentTargetIndex]}
+                onTargetFound={nextState} // Advances target or screen
+                onLogPerformance={handleLogPerformance} // Logs performance data
+            />
             </div>
           )}
       
