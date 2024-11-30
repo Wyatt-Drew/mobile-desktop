@@ -143,7 +143,7 @@ const Sender = () => {
               <div style={styles.qrWrapper}>
                 {sessionId ? (
                   <>
-                    <p style={styles.status}>Scan this QR Code to connect:</p>
+                    <p style={styles.headerBlack}>Scan this QR Code to connect:</p>
                     <QRCodeCanvas value={sessionId} size={400} />
                     <p style={styles.status}>{status}</p>
                   </>
@@ -160,7 +160,7 @@ const Sender = () => {
       
           {currentScreen === SCREENS.SUBJECT_ID && (
             <div style={styles.screen2}>
-              <p style={styles.header}>Mobile app connected!</p>
+              <p style={styles.headerBlack}>Mobile app connected!</p>
               <input
                 type="text"
                 placeholder="Enter Subject ID"
@@ -223,7 +223,6 @@ const styles = {
     height: "100vh",
     backgroundColor: "#000",
     color: "#fff",
-    padding: "20px",
   },
   qrWrapper: {
     backgroundColor: "#fff",
@@ -235,9 +234,16 @@ const styles = {
     marginTop: "10px",
     color: "#333",
   },
-  header: {
-    fontSize: "24px",
+  headerBlack: {
+    fontSize: "30px",
     marginBottom: "20px",
+    color: 'black',
+    fontWeight:'bold',
+  },
+  header: {
+    fontSize: "30px",
+    marginBottom: "20px",
+    fontWeight:'bold',
   },
   input: {
     padding: "10px",
