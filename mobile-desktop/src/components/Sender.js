@@ -10,11 +10,23 @@ import { appendRow } from "./googleSheetsService";
 
 const targetTable = {
     subject1: [
-      { pdf: "pdf1", targets: ["target1", "target2", "target3", "target4", "target5"] },
-      { pdf: "pdf2", targets: ["target6", "target7", "target8", "target9", "target10"] },
+      {
+        pdf: "PDF1",
+        targets: ["target1", "target2", "target3", "target4", "target5"],
+        landmarks: "Numbers", // Associated landmark type
+      },
+      {
+        pdf: "PDF2",
+        targets: ["target6", "target7", "target8", "target9", "target10"],
+        landmarks: "Icons", // Associated landmark type
+      },
     ],
     subject2: [
-      { pdf: "pdf3", targets: ["target11", "target12", "target13", "target14", "target15"] },
+      {
+        pdf: "PDF3",
+        targets: ["target11", "target12", "target13", "target14", "target15"],
+        landmarks: "Letters", // Associated landmark type
+      },
     ],
   };
 
@@ -43,6 +55,8 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [currentTargets, setCurrentTargets] = useState([]);
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [currentPdfId, setCurrentPdfId] = useState(null);
+  const [currentLandmarks, setCurrentLandmarks] = useState("");
+
 
   useEffect(() => {
     console.log("useEffect triggered to fetch session ID."); // Debugging log
@@ -143,6 +157,9 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
             setCurrentTargets(pdf.targets);
             setCurrentTargetIndex(0);
             setCurrentPdfId(pdf.pdf);
+            setCurrentLandmarks(pdf.landmarks);
+            sendMessage("PDF", pdf.pdf);
+            sendMessage("LANDMARK", pdf.landmarks);
         }
         setCurrentScreen(SCREENS.WELCOME);
         sendMessage("subjectId", subjectId);
@@ -208,6 +225,9 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         setCurrentTargets(nextPdf.targets);
         setCurrentTargetIndex(0);
         setCurrentPdfId(nextPdf.pdf);
+        setCurrentLandmarks(nextPdf.landmarks);
+        sendMessage("PDF", currentPdfId);
+        sendMessage("LANDMARK", currentLandmarks);
 
         console.log(`Loaded next PDF: ${nextPdf.pdf}`);
         setCurrentScreen(SCREENS.COUNTDOWN); // Start countdown for the next PDF
