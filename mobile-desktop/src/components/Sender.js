@@ -313,7 +313,10 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
       
           {currentScreen === SCREENS.OVERALLPREFERENCES && (
             <div style={styles.screen3}>
-              <OverallPreferences />
+              <OverallPreferences 
+              subjectId={subjectId}
+              onSubmit={handleOverallPreferencesSubmit}
+              />
             </div>
           )}
       
