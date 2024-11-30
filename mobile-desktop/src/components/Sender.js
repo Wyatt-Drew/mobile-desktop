@@ -6,6 +6,17 @@ import NasaTLX from "../pages/NasaTLX";
 import OverallPreferences from "../pages/OverallPreferences";
 import CompletionScreen from "../pages/CompletionScreen";
 
+const targetTable = {
+    subject1: [
+      { pdf: "pdf1", targets: ["target1", "target2", "target3", "target4", "target5"] },
+      { pdf: "pdf2", targets: ["target6", "target7", "target8", "target9", "target10"] },
+    ],
+    subject2: [
+      { pdf: "pdf3", targets: ["target11", "target12", "target13", "target14", "target15"] },
+    ],
+  };
+
+
 const SCREENS = {
   QR_CODE: 1, // Display QR Code
   SUBJECT_ID: 2, // Enter Subject ID
@@ -26,6 +37,13 @@ const Sender = () => {
   const [subjectId, setSubjectId] = useState("");
   const [inputMessage, setInputMessage] = useState("");
   const [messages, setMessages] = useState([]);
+
+
+  const imageList = [
+    require('../targets/target1.png'),
+    require('../targets/target2.png'),
+  ];
+
 
   useEffect(() => {
     console.log("useEffect triggered to fetch session ID."); // Debugging log
@@ -115,14 +133,15 @@ const Sender = () => {
 
   const sendSubjectId = () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
-      const subjectMessage = {
-        type: "subjectId",
-        sessionId,
-        message: subjectId,
-      };
-      console.log("Sending message:", subjectMessage);
-      ws.send(JSON.stringify(subjectMessage));
+    //   const subjectMessage = {
+    //     type: "subjectId",
+    //     sessionId,
+    //     message: subjectId,
+    //   };
+      console.log("Sending subjectId");
+    //   ws.send(JSON.stringify(subjectMessage));
       setCurrentScreen(SCREENS.WELCOME);
+      sendMessage("subjectId",'')
     } else {
       console.error("WebSocket is not connected. Unable to send Subject ID.");
     }
