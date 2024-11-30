@@ -36,7 +36,11 @@ const TargetDisplay = ({ subjectId, pdfId, target, onTargetFound, onLogPerforman
     <div className="App">
       <h1>Find This Target</h1>
       <div className="image-container">
-        <img src={`../targets/${target}.png`} alt="Target" className="target-image" />
+      <img 
+          src={process.env.PUBLIC_URL + `/targets/${target}.png`} 
+          alt={`Target ${target}`} 
+          className="target-image" 
+        />
       </div>
       <button className="action-button" onClick={handleTargetFound}>
         Target Found

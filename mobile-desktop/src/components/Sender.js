@@ -44,12 +44,6 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [currentPdfId, setCurrentPdfId] = useState(null);
 
-  const imageList = [
-    require('../targets/target1.png'),
-    require('../targets/target2.png'),
-  ];
-
-
   useEffect(() => {
     console.log("useEffect triggered to fetch session ID."); // Debugging log
     let isMounted = true;
