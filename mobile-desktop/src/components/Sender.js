@@ -20,9 +20,9 @@ const targetTable = {
 
 
 const SCREENS = {
-  QR_CODE: 1, // Display QR Code
-  SUBJECT_ID: 2, // Enter Subject ID
-  WELCOME: 3, // Welcome Screen
+  QR_CODE: 1, 
+  SUBJECT_ID: 2, 
+  WELCOME: 3, 
   COUNTDOWN: 4,
   TARGET: 5,
   NASATLX: 6,
@@ -30,18 +30,16 @@ const SCREENS = {
   COMPLETION: 8,
 };
 
-
-
 const Sender = () => {
-  console.log("Sender component rendered."); // Debugging log
-  const [sessionId, setSessionId] = useState("");
-  const [ws, setWs] = useState(null);
-  const [status, setStatus] = useState("Generating QR code...");
-  const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
+// Web Sockets
+const [sessionId, setSessionId] = useState("");
+const [ws, setWs] = useState(null);
+//States
+const [messages, setMessages] = useState([]);
+const [status, setStatus] = useState("Generating QR code...");
+const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
+//   PDF & Targets
   const [subjectId, setSubjectId] = useState("");
-  const [inputMessage, setInputMessage] = useState("");
-  const [messages, setMessages] = useState([]);
-//   
   const [currentTargets, setCurrentTargets] = useState([]);
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [currentPdfId, setCurrentPdfId] = useState(null);
@@ -205,8 +203,25 @@ const Sender = () => {
       console.error("Failed to submit NASA-TLX data:", error);
     }
 
-    // Move to the next state
-    nextState();
+    // Check for the next PDF
+    const subjectKey = `subject${subjectId}`;
+    const pdfs = targetTable[subjectKey];
+
+    const currentPdfIndex = pdfs.findIndex((entry) => entry.pdf === pdf);
+    if (currentPdfIndex !== -1 && currentPdfIndex < pdfs.length - 1) {
+        // Load the next PDF
+        const nextPdf = pdfs[currentPdfIndex + 1];
+        setCurrentTargets(nextPdf.targets);
+        setCurrentTargetIndex(0);
+        setCurrentPdfId(nextPdf.pdf);
+
+        console.log(`Loaded next PDF: ${nextPdf.pdf}`);
+        setCurrentScreen(SCREENS.COUNTDOWN); // Start countdown for the next PDF
+    } else {
+        // No more PDFs, transition to OVERALLPREFERENCES
+        console.log("All PDFs processed. Moving to Overall Preferences.");
+        setCurrentScreen(SCREENS.OVERALLPREFERENCES);
+    }
   };
 
 
@@ -288,7 +303,11 @@ const Sender = () => {
       
           {currentScreen === SCREENS.NASATLX && (
             <div style={styles.screen3}>
-              <NasaTLX />
+            <NasaTLX
+            subjectId={subjectId}
+            pdf={currentPdfId}
+            onSubmit={handleNasaTLXSubmit}
+            />
             </div>
           )}
       
