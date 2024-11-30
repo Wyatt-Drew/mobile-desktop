@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
+import Countdown from "./Countdown";
+import TargetDisplay from "./TargetDisplay";
+import NasaTLX from "./NasaTLX";
+import OverallPreferences from "./OverallPreferences";
+import CompletionScreen from "./CompletionScreen";
 
 const SCREENS = {
   QR_CODE: 1, // Display QR Code
   SUBJECT_ID: 2, // Enter Subject ID
   WELCOME: 3, // Welcome Screen
+  COUNTDOWN: 3,
+  TARGET: 3,
+  NASATLX: 3,
+  OVERALLPREFERENCES: 3,
+  COMPLETION: 3,
 };
 
 const Sender = () => {
@@ -66,7 +76,15 @@ const Sender = () => {
       if (message.type === "mobileConnected") {
         console.log("Mobile app connected. Transitioning to Subject ID input.");
         setCurrentScreen(SCREENS.SUBJECT_ID);
-      } else {
+      } else if (message.type === "Begin") {
+        setCurrentScreen(SCREENS.COUNTDOWN);
+        console.log("Received Begin");
+    } else if (message.type === "Begin") {
+        setCurrentScreen(SCREENS.COUNTDOWN);
+        console.log("Received Begin");
+      }
+      
+      else {
         console.log("Unhandled message type:", message.type);
       }
     };
@@ -79,18 +97,19 @@ const Sender = () => {
     socket.onerror = (err) => console.error("WebSocket error:", err);
   };
 
-  const sendMessage = () => {
+  const sendMessage = (type, message) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(
         JSON.stringify({
-          type: "message",
+          type,
           sessionId,
           sender: "Sender",
-          message: inputMessage,
+          message,
         })
       );
-      setMessages((prev) => [...prev, `Self: ${inputMessage}`]);
-      setInputMessage("");
+      setMessages((prev) => [...prev, `Self: ${type} - ${message}`]);
+    } else {
+      console.error("WebSocket is not connected.");
     }
   };
 
@@ -108,12 +127,15 @@ const Sender = () => {
       console.error("WebSocket is not connected. Unable to send Subject ID.");
     }
   };
-
+  const handleCountdownComplete = () => {
+    console.log("Countdown complete, transitioning to TARGET screen.");
+    setCurrentScreen(SCREENS.TARGET);
+  };
   return (
     <div style={styles.container}>
       {currentScreen === SCREENS.QR_CODE && (
         <div style={styles.screen1}>
-                  {ws && (
+                  {/* {ws && (
         <>
           <input
             type="text"
@@ -121,9 +143,9 @@ const Sender = () => {
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Enter a message..."
           />
-          <button onClick={sendMessage}>Send</button>
+          <button onClick={() => sendMessage("custom", inputMessage)}>Send</button>
         </>
-      )}
+      )} */}
       <div className="messages">
         {messages.map((msg, index) => (
           <div key={index}>{msg}</div>
@@ -138,7 +160,11 @@ const Sender = () => {
                 
               </>
             ) : (
-              <p style={styles.status}>Generating QR Code...</p>
+                <div>
+                    <p style={styles.status}>Generating QR Code...</p>
+                    <p style={styles.status}>The backend is probably starting up right now. </p>
+                    <p style={styles.status}>That can take 50 seconds or more. </p>
+                </div>
             )}
           </div>
         </div>
@@ -161,6 +187,31 @@ const Sender = () => {
       {currentScreen === SCREENS.WELCOME && (
         <div style={styles.screen3}>
           <p style={styles.header}>Welcome to the study</p>
+        </div>
+      )}
+        {currentScreen === SCREENS.COUNTDOWN && (
+        <div style={styles.screen3}>
+        <Countdown onComplete={handleCountdownComplete} />
+      </div>
+      )}
+        {currentScreen === SCREENS.TARGET && (
+        <div style={styles.screen3}>
+        <TargetDisplay />
+      </div>
+      )}
+        {currentScreen === SCREENS.NASATLX && (
+        <div style={styles.screen3}>
+          <NasaTLX></NasaTLX>
+        </div>
+      )}
+        {currentScreen === SCREENS.OVERALLPREFERENCES && (
+        <div style={styles.screen3}>
+          <OverallPreferences></OverallPreferences>
+        </div>
+      )}
+        {currentScreen === SCREENS.COMPLETION && (
+        <div style={styles.screen3}>
+          <CompletionScreen></CompletionScreen>
         </div>
       )}
     </div>
