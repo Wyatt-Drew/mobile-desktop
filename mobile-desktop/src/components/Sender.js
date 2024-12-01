@@ -177,6 +177,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   
   useEffect(() => {
     if (currentScreen === SCREENS.COUNTDOWN) {
+      setTimeLeft(2); 
       setCountdownActive(true); // Start countdown when screen switches
     }
   }, [currentScreen]);
@@ -261,14 +262,6 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         );
         console.log("Received TargetFound");
         nextState();
-    } else if (message.type === "Begin") {
-        setCurrentScreen(SCREENS.COUNTDOWN);
-        console.log("Received Begin");
-
-    } else if (message.type === "Begin") {
-        setCurrentScreen(SCREENS.COUNTDOWN);
-        console.log("Received Begin");
-
       }
       
       else {
