@@ -170,7 +170,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [currentPdfId, setCurrentPdfId] = useState(null);
   const [currentLandmarks, setCurrentLandmarks] = useState("");
-  const [startTime, setStartTime] = useState(null);
+  const startTime = useRef(null);
   const isFetchingSession = useRef(false);
   const [timeLeft, setTimeLeft] = useState(2);
   const [countdownActive, setCountdownActive] = useState(false);
@@ -399,13 +399,14 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 };
 
 useEffect(() => {
-  setStartTime(Date.now());
+    startTime.current = Date.now();
+    console.log("Task start time set:", startTime.current);
 }, [currentTargetIndex]);
 
 
   const handleTargetFound = async (subject, pdfLabel, targetLabel, landmarkType, scrollDistance, numberOfTaps) => {
     console.log("Received data:", { scrollDistance, numberOfTaps });
-  
+    
     // Validate inputs
     if (
         typeof subject !== "number" ||
@@ -420,7 +421,8 @@ useEffect(() => {
     }
   
     const endTime = Date.now();
-    const taskTime = ((endTime - startTime) / 1000).toFixed(2); // Task time in seconds
+    const diff = endTime - startTime.current;
+    const taskTime = diff / 1000;
     if (isNaN(taskTime)) {
         console.error("Task time calculation failed.");
         return;
