@@ -172,6 +172,34 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [currentLandmarks, setCurrentLandmarks] = useState("");
   const [startTime, setStartTime] = useState(null);
   const isFetchingSession = useRef(false);
+  const [timeLeft, setTimeLeft] = useState(2);
+  const [countdownActive, setCountdownActive] = useState(false);
+  
+  useEffect(() => {
+    if (currentScreen === SCREENS.COUNTDOWN) {
+      setCountdownActive(true); // Start countdown when screen switches
+    }
+  }, [currentScreen]);
+
+  useEffect(() => {
+    if (countdownActive && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime <= 1) {
+            clearInterval(timer);
+            handleCountdownComplete(); // Trigger completion logic
+            setCountdownActive(false);
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer); // Cleanup on unmount
+    }
+  }, [timeLeft, countdownActive]);
+
+
   
   useEffect(() => {
     // Prevent duplicate session generation
@@ -368,30 +396,6 @@ useEffect(() => {
 }, [currentTargetIndex]);
 
 
-const handleLogPerformance = async ({
-    subjectId,
-    pdfId,
-    target,
-    taskTime,
-    scrollDistance,
-    numberOfTaps,
-  }) => {
-    console.log("Logging performance data...");
-    try {
-      await appendRow("Performance", [
-        subjectId,
-        pdfId,
-        target,
-        taskTime,
-        scrollDistance,
-        numberOfTaps,
-      ]);
-      console.log("Performance data logged successfully!");
-    } catch (error) {
-      console.error("Failed to log performance data:", error);
-    }
-  };
-
   const handleTargetFound = async (scrollDistance, numberOfTaps) => {
     console.log("Received data:", { scrollDistance, numberOfTaps });
   
@@ -472,9 +476,12 @@ const handleLogPerformance = async ({
           )}
       
           {currentScreen === SCREENS.COUNTDOWN && (
-            <div style={styles.screen3}>
-              <Countdown onComplete={handleCountdownComplete} />
+            <div className="App">
+            <h1>Time to familiarize yourself with the PDF</h1>
+            <div className="timer">
+                {Math.floor(timeLeft / 60)}:{timeLeft % 60 < 10 ? `0${timeLeft % 60}` : timeLeft % 60}
             </div>
+        </div>
           )}
       
           {currentScreen === SCREENS.TARGET && (
