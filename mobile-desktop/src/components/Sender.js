@@ -22,8 +22,8 @@ const targetTable = {
         pdf: "PDF1",
         targets: [
             "target1", "target2", "target3", "target4", "target5",
-            "target2", "target3", "target4", "target5", "target1",
-            "target3", "target4", "target5", "target1", "target2",
+            // "target2", "target3", "target4", "target5", "target1",
+            // "target3", "target4", "target5", "target1", "target2",
             // "target4", "target5", "target1", "target2", "target3",
             // "target5", "target1", "target2", "target3", "target4"
         ],
@@ -54,11 +54,11 @@ const targetTable = {
       {
         pdf: "PDF4",
         targets: [
-            "target15", "target16", "target17", "target18", "target19",
-            "target16", "target17", "target18", "target19", "target15",
-            "target17", "target18", "target19", "target15", "target16",
-            // "target18", "target19", "target15", "target16", "target17",
-            // "target19", "target15", "target16", "target17", "target18"
+            "target20", "target16", "target17", "target18", "target19",
+            "target16", "target17", "target18", "target19", "target20",
+            "target17", "target18", "target19", "target20", "target16",
+            // "target18", "target19", "target20", "target16", "target17",
+            // "target19", "target20", "target16", "target17", "target18"
         ],
         landmarks: "Icons", // Associated landmark type
       },
@@ -112,11 +112,11 @@ const targetTable = {
           {
             pdf: "PDF4",
             targets: [
-                "target15", "target16", "target17", "target18", "target19",
-                "target16", "target17", "target18", "target19", "target15",
-                "target17", "target18", "target19", "target15", "target16",
-                // "target18", "target19", "target15", "target16", "target17",
-                // "target19", "target15", "target16", "target17", "target18"
+                "target20", "target16", "target17", "target18", "target19",
+                "target16", "target17", "target18", "target19", "target20",
+                "target17", "target18", "target19", "target20", "target16",
+                // "target18", "target19", "target20", "target16", "target17",
+                // "target19", "target20", "target16", "target17", "target18"
             ],
             
             landmarks: "ColorIcons", // Associated landmark type
@@ -436,16 +436,16 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
             </div>
           )}
       
-          {currentScreen === SCREENS.NASATLX && (
-            <div style={styles.screen3}>
-            <NasaTLX
-            subjectId={subjectId}
-            pdf={currentPdfId}
-            onSubmit={handleNasaTLXSubmit}
-            />
-            </div>
-          )}
-      
+      {currentScreen === SCREENS.NASATLX && (
+  <div
+  >
+    <NasaTLX
+      subjectId={subjectId}
+      pdf={currentPdfId}
+      onSubmit={handleNasaTLXSubmit}
+    />
+  </div>
+)} 
           {currentScreen === SCREENS.OVERALLPREFERENCES && (
             <div style={styles.screen3}>
               <OverallPreferences 

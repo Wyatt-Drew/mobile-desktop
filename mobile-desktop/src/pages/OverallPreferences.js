@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import CustomSlider from "../components/CustomSlider"; // Adjust the path
-import "./OverallPreferences.css"; // Import the updated CSS
+import CustomSlider from "../components/CustomSlider";
+import "./OverallPreferences.css";
 
 const OverallPreferences = ({ subjectId, onSubmit }) => {
   const [responses, setResponses] = useState({
@@ -27,13 +27,11 @@ const OverallPreferences = ({ subjectId, onSubmit }) => {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
-    console.log("Form submitted:", responses);
 
     try {
       for (const [section, values] of Object.entries(responses)) {
         await onSubmit(subjectId, section, values);
       }
-      console.log("Overall preferences submitted successfully!");
     } catch (error) {
       console.error("Error submitting overall preferences:", error);
     }
@@ -89,17 +87,19 @@ const OverallPreferences = ({ subjectId, onSubmit }) => {
   );
 
   return (
-    <div className="preferences-container">
-      <h1>Overall Preferences Questionnaire</h1>
-      <form onSubmit={handleSubmit}>
-        {renderSection("noLandmarks", "No Landmarks")}
-        {renderSection("iconsNumbersColored", "Icons, Numbers, Colored")}
-        {renderSection("icons", "Icons")}
-        {renderSection("lettersThumbnails", "Letters and Thumbnails")}
-        <button type="submit" className="submit-button" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit"}
-        </button>
-      </form>
+    <div className="preferences-wrapper">
+      <div className="preferences-container">
+        <h1>Overall Preferences Questionnaire</h1>
+        <form onSubmit={handleSubmit}>
+          {renderSection("noLandmarks", "No Landmarks")}
+          {renderSection("iconsNumbersColored", "Icons, Numbers, Colored")}
+          {renderSection("icons", "Icons")}
+          {renderSection("lettersThumbnails", "Letters and Thumbnails")}
+          <button type="submit" className="submit-button" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
