@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import Countdown from "../pages/Countdown";
 import TargetDisplay from "../pages/TargetDisplay";
 import NasaTLX from "../pages/NasaTLX";
 import OverallPreferences from "../pages/OverallPreferences";
@@ -165,15 +164,14 @@ const [messages, setMessages] = useState([]);
 const [status, setStatus] = useState("Generating QR code...");
 const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 //   PDF & Targets
-  const [subjectId, setSubjectId] = useState("");
-  const [currentTargets, setCurrentTargets] = useState([]);
-  const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
-  const [currentPdfId, setCurrentPdfId] = useState(null);
-  const [currentLandmarks, setCurrentLandmarks] = useState("");
   const [startTime, setStartTime] = useState(null);
   const isFetchingSession = useRef(false);
   const [timeLeft, setTimeLeft] = useState(2);
   const [countdownActive, setCountdownActive] = useState(false);
+  const subjectIdRef = useRef("");
+  const currentPdfIdRef = useRef(null);
+  const currentTargetRef = useRef(null);
+  const currentLandmarkRef = useRef("");
   
   useEffect(() => {
     if (currentScreen === SCREENS.COUNTDOWN) {
@@ -249,16 +247,8 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         setCurrentScreen(SCREENS.COUNTDOWN);
         console.log("Received Begin");
     } else if (message.type === "TARGETFOUND") {
-        const [subject, pdfLabel, targetLabel, landmarkType, tapCount, distance] = message.message.split(",");
-    
-        handleTargetFound(
-            parseInt(subject, 10),            // Subject as integer
-            pdfLabel,                         // PDF ID as string
-            targetLabel,                      // Target ID as string
-            landmarkType,                     // Landmark type as string
-            parseInt(distance, 10),           // Scroll distance as integer
-            parseInt(tapCount, 10)            // Tap count as integer
-        );
+        const [tapCount, distance] = message.message.split(",").map(Number);
+        handleTargetFound(distance, tapCount); // Pass clean data
         console.log("Received TargetFound");
         nextState();
     } else if (message.type === "Begin") {
@@ -308,15 +298,16 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         const subjectKey = `subject${subjectId}`;
         if (targetTable[subjectKey]) {
             const pdf = targetTable[subjectKey][0]; // Assuming the first PDF for simplicity
-            setCurrentTargets(pdf.targets);
+            currentTargetRef.current = pdf.targets[0];
             setCurrentTargetIndex(0);
-            setCurrentPdfId(pdf.pdf);
-            setCurrentLandmarks(pdf.landmarks);
+            currentPdfIdRef.current = pdf.pdf;
+            currentLandmarkRef.current = pdf.landmarks;
             sendMessage("PDF", pdf.pdf);
             sendMessage("LANDMARK", pdf.landmarks);
         }
         setCurrentScreen(SCREENS.WELCOME);
         sendMessage("subjectId", subjectId);
+        
     } else {
         console.error("WebSocket is not connected. Unable to send Subject ID.");
     }
@@ -324,9 +315,8 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const handleCountdownComplete = () => {
     console.log("Countdown complete, transitioning to TARGET screen.");
     setCurrentScreen(SCREENS.TARGET);
-    sendMessage("TARGET", currentTargets[currentTargetIndex]);
+    sendMessage("TARGET", currentTargetRef.current);
   };
-
 
 
   const handleOverallPreferencesSubmit = async (subjectId, landmarkStyle, { accuracy, speed, preference }) => {
@@ -362,79 +352,64 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     }
 
     // Check for the next PDF
-    const subjectKey = `subject${subjectId}`;
-    const pdfs = targetTable[subjectKey];
-
+    const subjectKey = `subject${subjectIdRef.current}`;
     const currentPdfIndex = pdfs.findIndex((entry) => entry.pdf === pdf);
+    
     if (currentPdfIndex !== -1 && currentPdfIndex < pdfs.length - 1) {
-        // Load the next PDF
-        const nextPdf = pdfs[currentPdfIndex + 1];
-        setCurrentTargets(nextPdf.targets);
-        setCurrentTargetIndex(0);
-        setCurrentPdfId(nextPdf.pdf);
-        setCurrentLandmarks(nextPdf.landmarks);
-        sendMessage("PDF", currentPdfId);
-        sendMessage("LANDMARK", currentLandmarks);
-
-        console.log(`Loaded next PDF: ${nextPdf.pdf}`);
-        setCurrentScreen(SCREENS.COUNTDOWN); // Start countdown for the next PDF
+      const nextPdf = pdfs[currentPdfIndex + 1];
+      currentTargetRef.current = nextPdf.targets[0];
+      currentPdfIdRef.current = nextPdf.pdf;
+      currentLandmarkRef.current = nextPdf.landmarks;
+    
+      sendMessage("PDF", currentPdfIdRef.current);
+      sendMessage("LANDMARK", currentLandmarkRef.current);
+    
+      setCurrentScreen(SCREENS.COUNTDOWN); // Only for UI rendering
     } else {
-        // No more PDFs, transition to OVERALLPREFERENCES
-        console.log("All PDFs processed. Moving to Overall Preferences.");
-        setCurrentScreen(SCREENS.OVERALLPREFERENCES);
+      console.log("All PDFs processed. Moving to Overall Preferences.");
+      setCurrentScreen(SCREENS.OVERALLPREFERENCES);
     }
   };
 
 
-  const nextState = () => {
-    if (currentTargetIndex < currentTargets.length - 1) {
-        sendMessage("TARGET", currentTargets[currentTargetIndex + 1]);
-        setCurrentTargetIndex((prevIndex) => prevIndex + 1);
-        
-    } else {
-        console.log("All targets in the current PDF processed. Moving to NASATLX.");
-        setCurrentScreen(SCREENS.NASATLX);
-        sendMessage("TARGET", "NULL");
-    }
-};
+  const nextState = targetTable[`subject${subjectIdRef.current}`].find(
+    (pdf) => pdf.pdf === currentPdfIdRef.current
+  )?.targets;
+  
+  if (nextTargets && currentTargetRef.current !== nextTargets[nextTargets.length - 1]) {
+    const nextIndex = nextTargets.indexOf(currentTargetRef.current) + 1;
+    currentTargetRef.current = nextTargets[nextIndex];
+    sendMessage("TARGET", currentTargetRef.current);
+  } else {
+    console.log("All targets in the current PDF processed. Moving to NASATLX.");
+    setCurrentScreen(SCREENS.NASATLX);
+    sendMessage("TARGET", "NULL");
+  }
 
 useEffect(() => {
   setStartTime(Date.now());
 }, [currentTargetIndex]);
 
 
-  const handleTargetFound = async (subject, pdfLabel, targetLabel, landmarkType, scrollDistance, numberOfTaps) => {
+  const handleTargetFound = async (scrollDistance, numberOfTaps) => {
     console.log("Received data:", { scrollDistance, numberOfTaps });
   
-    // Validate inputs
-    if (
-        typeof subject !== "number" ||
-        typeof pdfLabel !== "string" ||
-        typeof targetLabel !== "string" ||
-        typeof landmarkType !== "string" ||
-        typeof scrollDistance !== "number" ||
-        typeof numberOfTaps !== "number"
-    ) {
-        console.error("Invalid data received:", { subject, pdfLabel, targetLabel, landmarkType, scrollDistance, numberOfTaps });
-        return; // Stop execution if data isn't valid
+    if (typeof scrollDistance !== "number" || typeof numberOfTaps !== "number") {
+      console.error("Invalid data received:", { scrollDistance, numberOfTaps });
+      return; // Stop execution if data isn't valid
     }
   
     const endTime = Date.now();
-    const taskTime = ((endTime - startTime) / 1000).toFixed(2); // Task time in seconds
-    if (isNaN(taskTime)) {
-        console.error("Task time calculation failed.");
-        return;
-    }
+    const taskTime = ((endTime - startTime) / 1000).toFixed(2); // Calculate task time in seconds
 
     const rowData = [
-        subject,       // Subject ID
-        pdfLabel,      // PDF ID
-        targetLabel,   // Target ID
-        landmarkType,  // Landmark type
-        taskTime,      // Task time
-        scrollDistance, // Scroll distance
-        numberOfTaps,   // Number of taps
-    ];
+        subjectIdRef.current,     // Use ref for Subject ID
+        currentPdfIdRef.current,  // Use ref for PDF ID
+        currentTargetRef.current, // Use ref for Target ID
+        taskTime,                 // Task Time
+        scrollDistance,           // Scroll Distance
+        numberOfTaps,             // Number of Taps
+      ];
   
     try {
       await appendRow("Performance", rowData);
@@ -479,8 +454,8 @@ useEffect(() => {
               <input
                 type="text"
                 placeholder="Enter Subject ID"
-                value={subjectId}
-                onChange={(e) => setSubjectId(e.target.value)}
+                value={subjectIdRef.current}
+                onChange={(e) => (subjectIdRef.current = e.target.value)}
                 style={styles.input}
               />
               <button onClick={sendSubjectId} style={styles.button}>
@@ -507,9 +482,9 @@ useEffect(() => {
           {currentScreen === SCREENS.TARGET && (
             <div style={styles.screen3}>
             <TargetDisplay
-                subjectId={subjectId}
-                pdfId={currentPdfId}
-                target={currentTargets[currentTargetIndex]}
+            subjectId={subjectIdRef.current}
+            pdfId={currentPdfIdRef.current}
+            target={currentTargetRef.current}
             />
             </div>
           )}
