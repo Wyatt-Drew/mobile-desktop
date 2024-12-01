@@ -250,8 +250,9 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         console.log("Received Begin");
     } else if (message.type === "TARGETFOUND") {
         const [tapCount, distance] = message.message.split(",").map(Number);
-      
-        handleTargetFound(distance, tapCount); // Pass clean data
+
+
+        handleTargetFound(subjectId,currentPdfId, currentTargets[currentTargetIndex],  distance, tapCount); // Pass clean data
         console.log("Received TargetFound");
         nextState();
     } else if (message.type === "Begin") {
@@ -396,7 +397,7 @@ useEffect(() => {
 }, [currentTargetIndex]);
 
 
-  const handleTargetFound = async (scrollDistance, numberOfTaps) => {
+  const handleTargetFound = async (subjectId, pdf, target, scrollDistance, numberOfTaps) => {
     console.log("Received data:", { scrollDistance, numberOfTaps });
   
     if (typeof scrollDistance !== "number" || typeof numberOfTaps !== "number") {
@@ -406,11 +407,11 @@ useEffect(() => {
   
     const endTime = Date.now();
     const taskTime = ((endTime - startTime) / 1000).toFixed(2); // Calculate task time in seconds
-  
+
     const rowData = [
       subjectId,                           // Subject ID
-      currentPdfId,                        // PDF ID
-      currentTargets[currentTargetIndex],  // Target ID
+      pdf,                        // PDF ID
+      target,  // Target ID
       taskTime,                            // Task Time
       scrollDistance,                      // Scroll Distance (number)
       numberOfTaps,                        // Number of Taps (number)
