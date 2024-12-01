@@ -7,13 +7,21 @@ import OverallPreferences from "../pages/OverallPreferences";
 import CompletionScreen from "../pages/CompletionScreen";
 import { appendRow } from "./googleSheetsService";
 
+// const landmarkTypes = [
+//     { label: 'No Icons', value: 'None' },
+//     { label: 'Numbers', value: 'Numbers' },
+//     { label: 'Letters', value: 'Letters' },
+//     { label: 'Icons', value: 'Icons' },
+//     { label: 'ColorIcons', value: 'ColorIcons' },
+//   ];
+
 
 const targetTable = {
     subject1: [
       {
-        pdf: "PDF1",
-        targets: ["target1", "target2", "target3", "target4", "target5"],
-        landmarks: "Numbers", // Associated landmark type
+        pdf: "PDF5",
+        targets: ["target1"],
+        landmarks: "No Icons", // Associated landmark type
       },
       {
         pdf: "PDF2",
@@ -117,6 +125,10 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         setCurrentScreen(SCREENS.COUNTDOWN);
         console.log("Received Begin");
 
+    } else if (message.type === "Begin") {
+        setCurrentScreen(SCREENS.COUNTDOWN);
+        console.log("Received Begin");
+
       }
       
       else {
@@ -170,6 +182,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const handleCountdownComplete = () => {
     console.log("Countdown complete, transitioning to TARGET screen.");
     setCurrentScreen(SCREENS.TARGET);
+    sendMessage("TARGET", currentTargets[currentTargetIndex]);
   };
 
   const handleLogPerformance = async ({ subjectId, pdfId, target, taskTime, scrollDistance, numberOfTaps }) => {
@@ -241,10 +254,13 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 
   const nextState = () => {
     if (currentTargetIndex < currentTargets.length - 1) {
+        sendMessage("TARGET", currentTargets[currentTargetIndex + 1]);
         setCurrentTargetIndex((prevIndex) => prevIndex + 1);
+        
     } else {
         console.log("All targets in the current PDF processed. Moving to NASATLX.");
         setCurrentScreen(SCREENS.NASATLX);
+        sendMessage("TARGET", -999999);
     }
 };
 
