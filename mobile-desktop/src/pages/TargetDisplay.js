@@ -37,7 +37,7 @@ const TargetDisplay = ({ subjectId, pdfId, target, onTargetFound, onLogPerforman
       <h1>Find This Target</h1>
       <div className="image-container">
       <img 
-          src={process.env.PUBLIC_URL + `/targets/${target}.png`} 
+          src={process.env.PUBLIC_URL + `/targets/${pdfId}/${target}.png`} 
           alt={`Target ${target}`} 
           className="target-image" 
         />
