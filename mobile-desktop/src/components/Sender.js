@@ -224,7 +224,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         setCurrentScreen(SCREENS.COUNTDOWN);
         console.log("Received Begin");
     } else if (message.type === "TARGETFOUND") {
-        const [tapCount, distance] = message.payload.split(", ").map(item => {
+        const [tapCount, distance] = message.message.split(", ").map(item => {
             const [key, value] = item.split(": ");
             return parseInt(value, 10); // Convert to integer
           });
