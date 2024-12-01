@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import Countdown from "../pages/Countdown";
 import TargetDisplay from "../pages/TargetDisplay";
@@ -158,7 +158,8 @@ const SCREENS = {
 const Sender = () => {
 // Web Sockets
 const [sessionId, setSessionId] = useState("");
-const [ws, setWs] = useState(null);
+// const [ws, setWs] = useState(null);
+const wsRef = useRef(null);
 //States
 const [messages, setMessages] = useState([]);
 const [status, setStatus] = useState("Generating QR code...");
@@ -170,48 +171,44 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [currentPdfId, setCurrentPdfId] = useState(null);
   const [currentLandmarks, setCurrentLandmarks] = useState("");
   const [startTime, setStartTime] = useState(null);
-
+  const isFetchingSession = useRef(false);
+  
   useEffect(() => {
-    console.log("useEffect triggered to fetch session ID."); // Debugging log
-    let isMounted = true;
+    // Prevent duplicate session generation
+    if (isFetchingSession.current || sessionId) return;
 
+    isFetchingSession.current = true; // Mark as fetching
+    
     fetch("https://mobile-backend-74th.onrender.com/generate-session")
       .then((response) => response.json())
       .then((data) => {
-        if (isMounted) {
-          setSessionId(data.sessionId);
-          setStatus(`Connected to session: ${data.sessionId}`);
-          console.log("Generated session ID:", data.sessionId);
+        setSessionId(data.sessionId);
+        setStatus(`Connected to session: ${data.sessionId}`);
+        console.log("Generated session ID:", data.sessionId);
+
+        if (!wsRef.current) {
           autoConnect(data.sessionId);
         }
       })
       .catch((err) => {
-        if (isMounted) {
-          console.error("Error generating session ID:", err);
-          setStatus("Failed to generate session ID.");
-        }
+        console.error("Error generating session ID:", err);
+        setStatus("Failed to generate session ID.");
       });
-
-    return () => {
-      console.log("Cleanup: useEffect unmounted."); // Debugging log
-      isMounted = false;
-    };
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
 
   const autoConnect = (sessionId) => {
     const socket = new WebSocket("wss://mobile-backend-74th.onrender.com");
+    wsRef.current = socket;
 
     socket.onopen = () => {
-      setWs(socket);
       console.log("WebSocket connection opened.");
-
       const registerMessage = {
         type: "register",
         sessionId,
       };
-      console.log("Sending message:", registerMessage);
       socket.send(JSON.stringify(registerMessage));
     };
+
 
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
@@ -256,6 +253,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   };
 
   const sendMessage = (type, message) => {
+    const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(
         JSON.stringify({
@@ -272,6 +270,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   };
 
   const sendSubjectId = () => {
+    const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
         console.log("Sending subjectId");
         const subjectKey = `subject${subjectId}`;
