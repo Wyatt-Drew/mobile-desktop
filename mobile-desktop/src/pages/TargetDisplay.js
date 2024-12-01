@@ -2,43 +2,16 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 
 const TargetDisplay = ({ subjectId, pdfId, target, onTargetFound, onLogPerformance }) => {
-  const [startTime, setStartTime] = useState(null);
 
-  useEffect(() => {
-    setStartTime(Date.now());
-  }, [target]);
-
-  const handleTargetFound = () => {
-    const endTime = Date.now();
-    const taskTime = ((endTime - startTime) / 1000).toFixed(2);
-
-    console.log("Target Found:", {
-      subjectId,
-      pdfId,
-      target,
-      taskTime,
-    });
-
-    onLogPerformance({
-      subjectId,
-      pdfId,
-      target,
-      taskTime,
-      scrollDistance: 0,
-      numberOfTaps: 1,
-    });
-
-    onTargetFound();
-  };
 
   return (
     <div style={styles.container}>
       <div style={styles.cardContainer}>
         <div style={styles.card}>
           <h1 style={styles.title}>Find This Target</h1>
-          <button style={styles.button} onClick={handleTargetFound}>
+          {/* <button style={styles.button} onClick={handleTargetFound}>
             Target Found
-          </button>
+          </button> */}
         </div>
       </div>
       <div style={styles.imageContainer}>

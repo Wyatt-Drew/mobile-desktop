@@ -169,7 +169,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [currentPdfId, setCurrentPdfId] = useState(null);
   const [currentLandmarks, setCurrentLandmarks] = useState("");
-
+  const [startTime, setStartTime] = useState(null);
 
   useEffect(() => {
     console.log("useEffect triggered to fetch session ID."); // Debugging log
@@ -224,6 +224,12 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         setCurrentScreen(SCREENS.COUNTDOWN);
         console.log("Received Begin");
     } else if (message.type === "TARGETFOUND") {
+        const [tapCount, distance] = message.payload.split(", ").map(item => {
+            const [key, value] = item.split(": ");
+            return parseInt(value, 10); // Convert to integer
+          });
+      
+        handleTargetFound({ tapCount, distance });
         console.log("Received TargetFound");
         nextState();
     } else if (message.type === "Begin") {
@@ -290,10 +296,24 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     sendMessage("TARGET", currentTargets[currentTargetIndex]);
   };
 
-  const handleLogPerformance = async ({ subjectId, pdfId, target, taskTime, scrollDistance, numberOfTaps }) => {
+  const handleLogPerformance = async ({
+    subjectId,
+    pdfId: currentPdfId, // Use the correct variable
+    target,
+    taskTime,
+    scrollDistance,
+    numberOfTaps,
+  }) => {
     console.log("Logging performance data...");
     try {
-      await appendRow("Performance", [subjectId, pdfId, target, taskTime, scrollDistance, numberOfTaps]);
+      await appendRow("Performance", [
+        subjectId,
+        currentPdfId,
+        target,
+        taskTime,
+        scrollDistance,
+        numberOfTaps,
+      ]);
       console.log("Performance data logged successfully!");
     } catch (error) {
       console.error("Failed to log performance data:", error);
@@ -369,6 +389,33 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     }
 };
 
+useEffect(() => {
+  setStartTime(Date.now());
+}, [currentTargetIndex]);
+
+const handleTargetFound = (scrollDistance, numberOfTaps) => {
+  const endTime = Date.now();
+  const taskTime = ((endTime - startTime) / 1000).toFixed(2);
+
+  console.log("Target Found:", {
+    subjectId,
+    pdfId: currentPdfId,
+    target: currentTargets[currentTargetIndex],
+    taskTime,
+  });
+
+  handleLogPerformance({
+    subjectId,
+    pdfId: currentPdfId,
+    target: currentTargets[currentTargetIndex],
+    taskTime,
+    scrollDistance,
+    numberOfTaps,
+  });
+
+  nextState();
+};
+
   return (
         <div style={styles.container}>
           {currentScreen === SCREENS.QR_CODE && (
@@ -430,8 +477,6 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
                 subjectId={subjectId}
                 pdfId={currentPdfId}
                 target={currentTargets[currentTargetIndex]}
-                onTargetFound={nextState} // Advances target or screen
-                onLogPerformance={handleLogPerformance} // Logs performance data
             />
             </div>
           )}
