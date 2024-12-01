@@ -178,7 +178,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     if (isFetchingSession.current || sessionId) return;
 
     isFetchingSession.current = true; // Mark as fetching
-    
+
     fetch("https://mobile-backend-74th.onrender.com/generate-session")
       .then((response) => response.json())
       .then((data) => {
@@ -221,12 +221,9 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         setCurrentScreen(SCREENS.COUNTDOWN);
         console.log("Received Begin");
     } else if (message.type === "TARGETFOUND") {
-        const [tapCount, distance] = message.message.split(", ").map(item => {
-            const [key, value] = item.split(": ");
-            return parseInt(value, 10); // Convert to integer
-          });
+        const [tapCount, distance] = message.message.split(",").map(Number);
       
-        handleTargetFound({ tapCount, distance });
+        handleTargetFound(distance, tapCount); // Pass clean data
         console.log("Received TargetFound");
         nextState();
     } else if (message.type === "Begin") {
@@ -295,29 +292,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     sendMessage("TARGET", currentTargets[currentTargetIndex]);
   };
 
-  const handleLogPerformance = async ({
-    subjectId,
-    pdfId: currentPdfId, // Use the correct variable
-    target,
-    taskTime,
-    scrollDistance,
-    numberOfTaps,
-  }) => {
-    console.log("Logging performance data...");
-    try {
-      await appendRow("Performance", [
-        subjectId,
-        currentPdfId,
-        target,
-        taskTime,
-        scrollDistance,
-        numberOfTaps,
-      ]);
-      console.log("Performance data logged successfully!");
-    } catch (error) {
-      console.error("Failed to log performance data:", error);
-    }
-  };
+
 
   const handleOverallPreferencesSubmit = async (subjectId, landmarkStyle, { accuracy, speed, preference }) => {
     console.log("Submitting overall preferences for:", landmarkStyle);
@@ -392,28 +367,60 @@ useEffect(() => {
   setStartTime(Date.now());
 }, [currentTargetIndex]);
 
-const handleTargetFound = (scrollDistance, numberOfTaps) => {
-  const endTime = Date.now();
-  const taskTime = ((endTime - startTime) / 1000).toFixed(2);
 
-  console.log("Target Found:", {
+const handleLogPerformance = async ({
     subjectId,
-    pdfId: currentPdfId,
-    target: currentTargets[currentTargetIndex],
-    taskTime,
-  });
-
-  handleLogPerformance({
-    subjectId,
-    pdfId: currentPdfId,
-    target: currentTargets[currentTargetIndex],
+    pdfId,
+    target,
     taskTime,
     scrollDistance,
     numberOfTaps,
-  });
+  }) => {
+    console.log("Logging performance data...");
+    try {
+      await appendRow("Performance", [
+        subjectId,
+        pdfId,
+        target,
+        taskTime,
+        scrollDistance,
+        numberOfTaps,
+      ]);
+      console.log("Performance data logged successfully!");
+    } catch (error) {
+      console.error("Failed to log performance data:", error);
+    }
+  };
 
-  nextState();
-};
+  const handleTargetFound = async (scrollDistance, numberOfTaps) => {
+    console.log("Received data:", { scrollDistance, numberOfTaps });
+  
+    if (typeof scrollDistance !== "number" || typeof numberOfTaps !== "number") {
+      console.error("Invalid data received:", { scrollDistance, numberOfTaps });
+      return; // Stop execution if data isn't valid
+    }
+  
+    const endTime = Date.now();
+    const taskTime = ((endTime - startTime) / 1000).toFixed(2); // Calculate task time in seconds
+  
+    const rowData = [
+      subjectId,                           // Subject ID
+      currentPdfId,                        // PDF ID
+      currentTargets[currentTargetIndex],  // Target ID
+      taskTime,                            // Task Time
+      scrollDistance,                      // Scroll Distance (number)
+      numberOfTaps,                        // Number of Taps (number)
+    ];
+  
+    try {
+      await appendRow("Performance", rowData);
+      console.log("Performance data submitted successfully:", rowData);
+    } catch (error) {
+      console.error("Failed to submit performance data:", error);
+    }
+  
+    nextState();
+  };
 
   return (
         <div style={styles.container}>
