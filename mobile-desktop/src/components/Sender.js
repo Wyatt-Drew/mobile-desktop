@@ -362,12 +362,13 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     if (currentPdfIndex !== -1 && currentPdfIndex < pdfs.length - 1) {
         // Load the next PDF
         const nextPdf = pdfs[currentPdfIndex + 1];
+        sendMessage("PDF", nextPdf.pdf);
+        sendMessage("LANDMARK", nextPdf.landmarks);
+        sendMessage("START", "");
         setCurrentTargets(nextPdf.targets);
         setCurrentTargetIndex(0);
         setCurrentPdfId(nextPdf.pdf);
         setCurrentLandmarks(nextPdf.landmarks);
-        sendMessage("PDF", currentPdfId);
-        sendMessage("LANDMARK", currentLandmarks);
 
         console.log(`Loaded next PDF: ${nextPdf.pdf}`);
         setCurrentScreen(SCREENS.COUNTDOWN); // Start countdown for the next PDF
@@ -380,6 +381,8 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 
 
   const nextState = () => {
+    console.log("Current target index:", currentTargetIndex);
+console.log("Total targets:", currentTargets.length);
     if (currentTargetIndex < currentTargets.length - 1) {
         sendMessage("TARGET", currentTargets[currentTargetIndex + 1]);
         setCurrentTargetIndex((prevIndex) => prevIndex + 1);
@@ -388,8 +391,16 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         console.log("All targets in the current PDF processed. Moving to NASATLX.");
         setCurrentScreen(SCREENS.NASATLX);
         sendMessage("TARGET", "NULL");
+        sendMessage("PDFCOMPLETE", "NULL");
+
     }
 };
+useEffect(() => {
+    if (currentScreen === SCREENS.NASATLX) {
+      console.log("NASATLX screen loaded, sending BLACKSCREEN message.");
+      sendMessage("BLACKSCREEN", "NasaTLX loaded");
+    }
+  }, [currentScreen]);
 
 useEffect(() => {
     startTime.current = Date.now();
