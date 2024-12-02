@@ -2,16 +2,16 @@ body, html {
   background-color: #121212;
   color: #ffffff;
   margin: 0;
-  height: 100%; /* Ensure full height */
+  height: 100%;
   font-family: Arial, sans-serif;
 }
 
 .App {
   display: flex;
-  flex-direction: column; /* Stack items vertically */
-  justify-content: center; /* Center vertically */
-  align-items: center; /* Center horizontally */
-  height: 100vh; /* Full viewport height */
+  flex-direction: column; 
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
   text-align: center;
 }
 

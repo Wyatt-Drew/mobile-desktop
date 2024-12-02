@@ -285,8 +285,8 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
             const pdf = targetTable[subjectKey][0];
             currentTargetsRef.current = pdf.targets || []; // Ensure it's an array
             currentTargetIndexRef.current = 0; // Reset index
-            setCurrentPdfId(pdf.pdf); // Still using useState
-            setCurrentLandmarks(pdf.landmarks); // Still using useState
+            setCurrentPdfId(pdf.pdf); 
+            setCurrentLandmarks(pdf.landmarks);
             sendMessage("PDF", pdf.pdf);
             sendMessage("LANDMARK", pdf.landmarks);
           }

@@ -38,16 +38,16 @@ const styles = {
   },
   arrowContainer: {
     display: "flex",
-    flexDirection: "column", // Arrange title and arrow vertically
+    flexDirection: "column", 
     justifyContent: "center",
     alignItems: "center",
     width: "30%",
   },
   title: {
-    marginBottom: "20px", // Add space between the title and the arrow
+    marginBottom: "20px", 
     fontSize: "2rem",
     fontWeight: "bold",
-    color: "white", // Text color
+    color: "white",
     textAlign: "center",
   },
   arrowWrapper: {
@@ -55,12 +55,12 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    width: "200px", // Arrow width
-    height: "100px", // Arrow height
+    width: "200px", 
+    height: "100px", 
   },
   arrow: {
-    width: "100%", // Scale SVG to fit
-    height: "auto", // Maintain aspect ratio
+    width: "100%", 
+    height: "auto", 
   },
   imageContainer: {
     flex: 1,
