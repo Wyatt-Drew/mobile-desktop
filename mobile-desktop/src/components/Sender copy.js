@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import Countdown from "../pages/Countdown";
 import TargetDisplay from "../pages/TargetDisplay";
 import NasaTLX from "../pages/NasaTLX";
 import OverallPreferences from "../pages/OverallPreferences";
@@ -176,7 +175,43 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [countdownActive, setCountdownActive] = useState(false);
   const currentTargetIndexRef = useRef(0);
   const currentTargetsRef = useRef([]);
+  const pendingAcks = useRef({});
   
+  const sendTargetWithAck = (targetLabel) => {
+    const maxRetries = 5; // Max number of retries
+    let retries = 0;
+
+    const sendMessageWithRetry = () => {
+        if (retries >= maxRetries) {
+            console.error(`Failed to receive ACK for ${targetLabel} after ${maxRetries} retries.`);
+            return; // Stop after reaching max retries
+        }
+
+        // Send the TARGET message
+        sendMessage("TARGET", targetLabel);
+        console.log(`Sent TARGET: ${targetLabel}, Retry: ${retries}`);
+
+        // Increment retry count
+        retries++;
+
+        // Retry if no ACK is received
+        pendingAcks.current[targetLabel] = setTimeout(sendMessageWithRetry, 1000);
+    };
+
+    sendMessageWithRetry(); // Start the process
+};
+
+  
+const handleAck = (messageLabel) => {
+    if (pendingAcks.current[messageLabel]) {
+        clearTimeout(pendingAcks.current[messageLabel]); // Stop retries for this label
+        delete pendingAcks.current[messageLabel]; // Remove from pending ACKs
+        console.log(`Received ACK for ${messageLabel}`);
+    }
+};
+  
+  
+
   useEffect(() => {
     if (currentScreen === SCREENS.COUNTDOWN) {
       setTimeLeft(2); 
@@ -263,8 +298,11 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
             parseInt(tapCount, 10)            // Tap count as integer
         );
         console.log("Received TargetFound");
+        nextState();
       }
-      
+      if (message.type === "ACK") {
+        handleAck(message.message); // Process ACK
+      }
       else {
         console.log("Unhandled message type:", message.type);
       }
@@ -327,7 +365,9 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     if (currentPdf) {
       handleNewPdfLoad(currentPdf); // Reset targets and index for this PDF
       const firstTarget = currentTargetsRef.current[currentTargetIndexRef.current];
-      sendMessage("TARGET", firstTarget); // Send the first target
+  
+      // Send the first target with ACK logic
+      sendTargetWithAck(firstTarget);
       console.log("Started new target sequence with:", firstTarget);
     } else {
       console.error("No matching PDF found for currentPdfId:", currentPdfId);
@@ -404,16 +444,16 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const nextState = () => {
     console.log("Current Target Index:", currentTargetIndexRef.current);
     console.log("Current Targets Length:", currentTargetsRef.current.length);
+  
     if (currentTargetIndexRef.current < currentTargetsRef.current.length - 1) {
-    sendMessage("TARGET", currentTargetsRef.current[currentTargetIndexRef.current+1]);
-    currentTargetIndexRef.current += 1; // Increment index
-    const nextTarget = currentTargetsRef.current[currentTargetIndexRef.current];
-    console.log(`Sent next target: ${nextTarget} (Index: ${currentTargetIndexRef.current})`);
+      currentTargetIndexRef.current += 1; // Increment the index
+      const nextTarget = currentTargetsRef.current[currentTargetIndexRef.current];
+      sendTargetWithAck(nextTarget);
+      console.log(`Sent next target: ${nextTarget} (Index: ${currentTargetIndexRef.current})`);
     } else {
-    console.log("No more targets in the current PDF. Transitioning to NASATLX.");
-    setCurrentScreen(SCREENS.NASATLX);
-    sendMessage("TARGET", "NULL");
-    sendMessage("PDFCOMPLETE", "NULL");
+      console.log("No more targets in the current PDF. Transitioning to NASATLX.");
+      setCurrentScreen(SCREENS.NASATLX);
+      sendMessage("PDFCOMPLETE", "NULL");
     }
   };
   const handleNewPdfLoad = (pdf) => {
