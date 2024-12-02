@@ -166,14 +166,16 @@ const [status, setStatus] = useState("Generating QR code...");
 const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 //   PDF & Targets
   const [subjectId, setSubjectId] = useState("");
-  const [currentTargets, setCurrentTargets] = useState([]);
-  const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
+//   const [currentTargets, setCurrentTargets] = useState([]);
+//   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [currentPdfId, setCurrentPdfId] = useState(null);
   const [currentLandmarks, setCurrentLandmarks] = useState("");
   const startTime = useRef(null);
   const isFetchingSession = useRef(false);
   const [timeLeft, setTimeLeft] = useState(2);
   const [countdownActive, setCountdownActive] = useState(false);
+  const currentTargetIndexRef = useRef(0);
+  const currentTargetsRef = useRef([]);
   
   useEffect(() => {
     if (currentScreen === SCREENS.COUNTDOWN) {
@@ -300,14 +302,14 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         console.log("Sending subjectId");
         const subjectKey = `subject${subjectId}`;
         if (targetTable[subjectKey]) {
-            const pdf = targetTable[subjectKey][0]; // Assuming the first PDF for simplicity
-            setCurrentTargets(pdf.targets);
-            setCurrentTargetIndex(0);
-            setCurrentPdfId(pdf.pdf);
-            setCurrentLandmarks(pdf.landmarks);
+            const pdf = targetTable[subjectKey][0];
+            currentTargetsRef.current = pdf.targets || []; // Ensure it's an array
+            currentTargetIndexRef.current = 0; // Reset index
+            setCurrentPdfId(pdf.pdf); // Still using useState
+            setCurrentLandmarks(pdf.landmarks); // Still using useState
             sendMessage("PDF", pdf.pdf);
             sendMessage("LANDMARK", pdf.landmarks);
-        }
+          }
         setCurrentScreen(SCREENS.WELCOME);
         sendMessage("subjectId", subjectId);
     } else {
@@ -317,8 +319,22 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const handleCountdownComplete = () => {
     console.log("Countdown complete, transitioning to TARGET screen.");
     setCurrentScreen(SCREENS.TARGET);
-    sendMessage("TARGET", currentTargets[currentTargetIndex]);
+  
+    // Load targets for the current PDF
+    const subjectKey = `subject${subjectId}`;
+    const pdfs = targetTable[subjectKey];
+    const currentPdf = pdfs.find((entry) => entry.pdf === currentPdfId);
+  
+    if (currentPdf) {
+      handleNewPdfLoad(currentPdf); // Reset targets and index for this PDF
+      const firstTarget = currentTargetsRef.current[currentTargetIndexRef.current];
+      sendMessage("TARGET", firstTarget); // Send the first target
+      console.log("Started new target sequence with:", firstTarget);
+    } else {
+      console.error("No matching PDF found for currentPdfId:", currentPdfId);
+    }
   };
+  
 
 
 
@@ -365,8 +381,14 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         sendMessage("PDF", nextPdf.pdf);
         sendMessage("LANDMARK", nextPdf.landmarks);
         sendMessage("START", "");
-        setCurrentTargets(nextPdf.targets);
-        setCurrentTargetIndex(0);
+        if (pdf.targets && pdf.targets.length > 0) {
+            currentTargetsRef.current = pdf.targets;
+            currentTargetIndexRef.current = 0; // Reset index for the new PDF
+            console.log("Targets loaded:", currentTargetsRef.current);
+        } else {
+            console.error("No targets found for the selected PDF.");
+            currentTargetsRef.current = []; // Fall back to an empty list if targets are undefined or empty
+        }
         setCurrentPdfId(nextPdf.pdf);
         setCurrentLandmarks(nextPdf.landmarks);
 
@@ -381,20 +403,26 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 
 
   const nextState = () => {
-    console.log("Current target index:", currentTargetIndex);
-console.log("Total targets:", currentTargets.length);
-    if (currentTargetIndex < currentTargets.length - 1) {
-        sendMessage("TARGET", currentTargets[currentTargetIndex + 1]);
-        setCurrentTargetIndex((prevIndex) => prevIndex + 1);
-        
+    console.log("Current Target Index:", currentTargetIndexRef.current);
+    console.log("Current Targets Length:", currentTargetsRef.current.length);
+  
+    if (currentTargetIndexRef.current < currentTargetsRef.current.length - 1) {
+      currentTargetIndexRef.current += 1; // Increment index
+      const nextTarget = currentTargetsRef.current[currentTargetIndexRef.current];
+      sendMessage("TARGET", nextTarget);
+      console.log(`Sent next target: ${nextTarget} (Index: ${currentTargetIndexRef.current})`);
     } else {
-        console.log("All targets in the current PDF processed. Moving to NASATLX.");
-        setCurrentScreen(SCREENS.NASATLX);
-        sendMessage("TARGET", "NULL");
-        sendMessage("PDFCOMPLETE", "NULL");
-
+      console.log("No more targets in the current PDF. Transitioning to NASATLX.");
+      setCurrentScreen(SCREENS.NASATLX);
+      sendMessage("TARGET", "NULL");
+      sendMessage("PDFCOMPLETE", "NULL");
     }
-};
+  };
+  const handleNewPdfLoad = (pdf) => {
+    currentTargetsRef.current = pdf.targets || [];
+    currentTargetIndexRef.current = 0;
+    console.log("New PDF loaded. Targets:", currentTargetsRef.current);
+  };
 useEffect(() => {
     if (currentScreen === SCREENS.NASATLX) {
       console.log("NASATLX screen loaded, sending BLACKSCREEN message.");
@@ -405,7 +433,7 @@ useEffect(() => {
 useEffect(() => {
     startTime.current = Date.now();
     console.log("Task start time set:", startTime.current);
-}, [currentTargetIndex]);
+}, [currentTargetIndexRef.current]);
 
 
   const handleTargetFound = async (subject, pdfLabel, targetLabel, landmarkType, scrollDistance, numberOfTaps) => {
@@ -515,7 +543,7 @@ useEffect(() => {
             <TargetDisplay
                 subjectId={subjectId}
                 pdfId={currentPdfId}
-                target={currentTargets[currentTargetIndex]}
+                target={currentTargetsRef.current[currentTargetIndexRef.current]}
             />
             </div>
           )}
