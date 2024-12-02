@@ -157,7 +157,7 @@ const SCREENS = {
 
 const Sender = () => {
 // Web Sockets
-const [sessionId, setSessionId] = useState("");
+const sessionIdRef = useRef(null);
 // const [ws, setWs] = useState(null);
 const wsRef = useRef(null);
 //States
@@ -206,14 +206,14 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   
   useEffect(() => {
     // Prevent duplicate session generation
-    if (isFetchingSession.current || sessionId) return;
+    if (isFetchingSession.current || sessionIdRef.current) return;
 
     isFetchingSession.current = true; // Mark as fetching
 
     fetch("https://mobile-backend-74th.onrender.com/generate-session")
       .then((response) => response.json())
       .then((data) => {
-        setSessionId(data.sessionId);
+        sessionIdRef.current = data.sessionId;
         setStatus(`Connected to session: ${data.sessionId}`);
         console.log("Generated session ID:", data.sessionId);
 
@@ -284,7 +284,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
       ws.send(
         JSON.stringify({
           type,
-          sessionId,
+          sessionId: sessionIdRef.current,
           sender: "Sender",
           message,
         })
@@ -488,10 +488,10 @@ useEffect(() => {
                 ))}
               </div>
               <div style={styles.qrWrapper}>
-                {sessionId ? (
+                {sessionIdRef.current ? (
                   <>
                     <p style={styles.headerBlack}>Scan this QR Code to connect:</p>
-                    <QRCodeCanvas value={sessionId} size={400} />
+                    <QRCodeCanvas value={sessionIdRef.current} size={400} />
                     <p style={styles.status}>{status}</p>
                   </>
                 ) : (
