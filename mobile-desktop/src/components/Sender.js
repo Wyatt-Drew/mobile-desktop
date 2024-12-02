@@ -305,7 +305,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     const pdfs = targetTable[subjectKey];
     const currentPdf = pdfs.find((entry) => entry.pdf === currentPdfId);
   
-    if (currentPdf) {
+    if (currentPdf && currentScreen != SCREENS.OVERALLPREFERENCES) {
       handleNewPdfLoad(currentPdf); // Reset targets and index for this PDF
       const firstTarget = currentTargetsRef.current[currentTargetIndexRef.current];
       sendMessage("TARGET", firstTarget); // Send the first target
