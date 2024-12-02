@@ -297,6 +297,10 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     }
   };
   const handleCountdownComplete = () => {
+    if (currentScreen !== SCREENS.COUNTDOWN)
+      {
+        return;
+      }
     console.log("Countdown complete, transitioning to TARGET screen.");
     setCurrentScreen(SCREENS.TARGET);
   
@@ -305,7 +309,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     const pdfs = targetTable[subjectKey];
     const currentPdf = pdfs.find((entry) => entry.pdf === currentPdfId);
   
-    if (currentPdf && currentScreen != SCREENS.OVERALLPREFERENCES) {
+    if (currentPdf) {
       handleNewPdfLoad(currentPdf); // Reset targets and index for this PDF
       const firstTarget = currentTargetsRef.current[currentTargetIndexRef.current];
       sendMessage("TARGET", firstTarget); // Send the first target
@@ -361,6 +365,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         sendMessage("PDF", nextPdf.pdf);
         sendMessage("LANDMARK", nextPdf.landmarks);
         sendMessage("START", "");
+        sendMessage("TARGET", "none");
         if (pdf.targets && pdf.targets.length > 0) {
             currentTargetsRef.current = pdf.targets;
             currentTargetIndexRef.current = 0; // Reset index for the new PDF
