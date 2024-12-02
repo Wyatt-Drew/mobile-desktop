@@ -5,9 +5,10 @@ import "./OverallPreferences.css";
 const OverallPreferences = ({ subjectId, onSubmit }) => {
   const [responses, setResponses] = useState({
     noLandmarks: { accuracy: 1, speed: 1, preference: 1 },
-    iconsNumbersColored: { accuracy: 1, speed: 1, preference: 1 },
+    numbers: { accuracy: 1, speed: 1, preference: 1 },
+    iconsColored: { accuracy: 1, speed: 1, preference: 1 },
     icons: { accuracy: 1, speed: 1, preference: 1 },
-    lettersThumbnails: { accuracy: 1, speed: 1, preference: 1 },
+    letters: { accuracy: 1, speed: 1, preference: 1 },
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,9 +93,10 @@ const OverallPreferences = ({ subjectId, onSubmit }) => {
         <h1>Overall Preferences Questionnaire</h1>
         <form onSubmit={handleSubmit}>
           {renderSection("noLandmarks", "No Landmarks")}
-          {renderSection("iconsNumbersColored", "Icons, Numbers, Colored")}
+          {renderSection("numbers", "Numbers")}
+          {renderSection("iconsColored", "Colored Icons")}
           {renderSection("icons", "Icons")}
-          {renderSection("lettersThumbnails", "Letters and Thumbnails")}
+          {renderSection("letters", "Letters")}
           <button type="submit" className="submit-button" disabled={isSubmitting}>
             {isSubmitting ? "Submitting..." : "Submit"}
           </button>

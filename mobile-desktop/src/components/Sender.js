@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import Countdown from "../pages/Countdown";
 import TargetDisplay from "../pages/TargetDisplay";
 import NasaTLX from "../pages/NasaTLX";
 import OverallPreferences from "../pages/OverallPreferences";
@@ -21,106 +20,111 @@ const targetTable = {
       {
           pdf: "PDF1",
           targets: [
-              "target1", "target2", "target3",
-              "target2", "target3", "target1",
-              "target3", "target1", "target2"
+              "target1", "target3", "target4",
+              "target3", "target4", "target1",
+              "target4", "target1", "target3"
           ],
-          landmarks: "Numbers", // Associated landmark type
+          landmarks: "Numbers",
       },
       {
           pdf: "PDF2",
           targets: [
-              "target6", "target7", "target8",
-              "target7", "target8", "target6",
-              "target8", "target6", "target7"
+              "target6", "target8", "target9",
+              "target8", "target9", "target6",
+              "target9", "target6", "target8"
           ],
-          landmarks: "No Icons", // Associated landmark type
+          landmarks: "No Icons",
       },
       {
           pdf: "PDF3",
           targets: [
-              "target11", "target12", "target13",
-              "target12", "target13", "target11",
-              "target13", "target11", "target12"
+              "target11", "target13", "target15",
+              "target13", "target15", "target11",
+              "target15", "target11", "target13"
           ],
-          landmarks: "Letters", // Associated landmark type
+          landmarks: "Letters", 
       },
       {
           pdf: "PDF4",
           targets: [
-              "target20", "target16", "target17",
-              "target16", "target17", "target20",
-              "target17", "target20", "target16"
+              "target16", "target18", "target20",
+              "target18", "target20", "target16",
+              "target20", "target16", "target18"
           ],
-          landmarks: "Icons", // Associated landmark type
+          landmarks: "Icons", 
       },
       {
           pdf: "PDF5",
           targets: [
-              "target21", "target22", "target23",
-              "target22", "target23", "target21",
-              "target23", "target21", "target22"
+              "target21", "target22", "target24",
+              "target22", "target24", "target21",
+              "target24", "target21", "target22"
           ],
-          landmarks: "ColorIcons", // Associated landmark type
+          landmarks: "ColorIcons",
       },
   ],
   subject2: [
       {
           pdf: "PDF1",
           targets: [
-              "target1", "target2", "target3",
-              "target2", "target3", "target1",
-              "target3", "target1", "target2"
+            "target1", "target3", "target4",
+            "target3", "target4", "target1",
+            "target4", "target1", "target3"
           ],
-          landmarks: "No Icons", // Associated landmark type
+          landmarks: "No Icons", 
       },
       {
           pdf: "PDF2",
           targets: [
-              "target6", "target7", "target8",
-              "target7", "target8", "target6",
-              "target8", "target6", "target7"
+            "target6", "target8", "target9",
+            "target8", "target9", "target6",
+            "target9", "target6", "target8"
           ],
-          landmarks: "Letters", // Associated landmark type
+          landmarks: "Letters", 
       },
       {
           pdf: "PDF3",
           targets: [
-              "target11", "target12", "target13",
-              "target12", "target13", "target11",
-              "target13", "target11", "target12"
+            "target11", "target13", "target15",
+            "target13", "target15", "target11",
+            "target15", "target11", "target13"
           ],
-          landmarks: "Icons", // Associated landmark type
+          landmarks: "Icons", 
       },
       {
           pdf: "PDF4",
           targets: [
-              "target20", "target16", "target17",
-              "target16", "target17", "target20",
-              "target17", "target20", "target16"
+            "target16", "target18", "target20",
+            "target18", "target20", "target16",
+            "target20", "target16", "target18"
           ],
-          landmarks: "ColorIcons", // Associated landmark type
+          landmarks: "ColorIcons", 
       },
       {
           pdf: "PDF5",
           targets: [
-              "target21", "target22", "target23",
-              "target22", "target23", "target21",
-              "target23", "target21", "target22"
+            "target21", "target22", "target24",
+            "target22", "target24", "target21",
+            "target24", "target21", "target22"
           ],
-          landmarks: "Numbers", // Associated landmark type
+          landmarks: "Numbers",
       },
   ],
   subject3: [
       {
           pdf: "PDF1",
           targets: [
-              "target1", "target2", "target3",
-              "target2", "target3", "target1",
-              "target3", "target1", "target2"
+              "target1", "target5", 
           ],
-          landmarks: "Numbers", // Associated landmark type
-      }
+          landmarks: "Numbers", 
+      },
+      {
+        pdf: "PDF2",
+        targets: [
+            "target1", "target5", 
+        ],
+        landmarks: "ColorIcons", 
+    }
   ]
 };
 
@@ -138,7 +142,6 @@ const SCREENS = {
 const Sender = () => {
 // Web Sockets
 const sessionIdRef = useRef(null);
-// const [ws, setWs] = useState(null);
 const wsRef = useRef(null);
 //States
 const [messages, setMessages] = useState([]);
@@ -146,20 +149,18 @@ const [status, setStatus] = useState("Generating QR code...");
 const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 //   PDF & Targets
   const [subjectId, setSubjectId] = useState("");
-//   const [currentTargets, setCurrentTargets] = useState([]);
-//   const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [currentPdfId, setCurrentPdfId] = useState(null);
   const [currentLandmarks, setCurrentLandmarks] = useState("");
   const startTime = useRef(null);
   const isFetchingSession = useRef(false);
-  const [timeLeft, setTimeLeft] = useState(2);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [countdownActive, setCountdownActive] = useState(false);
   const currentTargetIndexRef = useRef(0);
   const currentTargetsRef = useRef([]);
   
   useEffect(() => {
     if (currentScreen === SCREENS.COUNTDOWN) {
-      setTimeLeft(2); 
+      setTimeLeft(60); 
       setCountdownActive(true); // Start countdown when screen switches
     }
   }, [currentScreen]);
@@ -170,7 +171,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         setTimeLeft((prevTime) => {
           if (prevTime <= 1) {
             clearInterval(timer);
-            handleCountdownComplete(); // Trigger completion logic
+            handleCountdownComplete(); 
             setCountdownActive(false);
             return 0;
           }
