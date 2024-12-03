@@ -5,128 +5,9 @@ import NasaTLX from "../pages/NasaTLX";
 import OverallPreferences from "../pages/OverallPreferences";
 import CompletionScreen from "../pages/CompletionScreen";
 import { appendRow } from "./googleSheetsService";
+import './Sender.css';
+import targetTable from "./targetTable";
 
-// const landmarkTypes = [
-//     { label: 'No Icons', value: 'None' },
-//     { label: 'Numbers', value: 'Numbers' },
-//     { label: 'Letters', value: 'Letters' },
-//     { label: 'Icons', value: 'Icons' },
-//     { label: 'ColorIcons', value: 'ColorIcons' },
-//   ];
-
-
-const targetTable = {
-  subject1: [
-      {
-          pdf: "PDF1",
-          targets: [
-              "target1", "target3", "target4",
-              "target3", "target4", "target1",
-              "target4", "target1", "target3"
-          ],
-          landmarks: "Numbers",
-      },
-      {
-          pdf: "PDF2",
-          targets: [
-              "target6", "target8", "target9",
-              "target8", "target9", "target6",
-              "target9", "target6", "target8"
-          ],
-          landmarks: "No Icons",
-      },
-      {
-          pdf: "PDF3",
-          targets: [
-              "target11", "target13", "target15",
-              "target13", "target15", "target11",
-              "target15", "target11", "target13"
-          ],
-          landmarks: "Letters", 
-      },
-      {
-          pdf: "PDF4",
-          targets: [
-              "target16", "target18", "target20",
-              "target18", "target20", "target16",
-              "target20", "target16", "target18"
-          ],
-          landmarks: "Icons", 
-      },
-      {
-          pdf: "PDF5",
-          targets: [
-              "target21", "target22", "target24",
-              "target22", "target24", "target21",
-              "target24", "target21", "target22"
-          ],
-          landmarks: "ColorIcons",
-      },
-  ],
-  subject2: [
-      {
-          pdf: "PDF1",
-          targets: [
-            "target1", "target3", "target4",
-            "target3", "target4", "target1",
-            "target4", "target1", "target3"
-          ],
-          landmarks: "No Icons", 
-      },
-      {
-          pdf: "PDF2",
-          targets: [
-            "target6", "target8", "target9",
-            "target8", "target9", "target6",
-            "target9", "target6", "target8"
-          ],
-          landmarks: "Letters", 
-      },
-      {
-          pdf: "PDF3",
-          targets: [
-            "target11", "target13", "target15",
-            "target13", "target15", "target11",
-            "target15", "target11", "target13"
-          ],
-          landmarks: "Icons", 
-      },
-      {
-          pdf: "PDF4",
-          targets: [
-            "target16", "target18", "target20",
-            "target18", "target20", "target16",
-            "target20", "target16", "target18"
-          ],
-          landmarks: "ColorIcons", 
-      },
-      {
-          pdf: "PDF5",
-          targets: [
-            "target21", "target22", "target24",
-            "target22", "target24", "target21",
-            "target24", "target21", "target22"
-          ],
-          landmarks: "Numbers",
-      },
-  ],
-  subject3: [
-      {
-          pdf: "PDF1",
-          targets: [
-              "target1", "target5", 
-          ],
-          landmarks: "Numbers", 
-      },
-      {
-        pdf: "PDF2",
-        targets: [
-            "target7", "target8", 
-        ],
-        landmarks: "ColorIcons", 
-    }
-  ]
-};
 
 const SCREENS = {
   QR_CODE: 1, 
@@ -465,26 +346,26 @@ useEffect(() => {
   };
 
   return (
-        <div style={styles.container}>
+        <div className="container">
           {currentScreen === SCREENS.QR_CODE && (
-            <div style={styles.screen1}>
+            <div className="screen1">
               <div className="messages">
                 {messages.map((msg, index) => (
                   <div key={index}>{msg}</div>
                 ))}
               </div>
-              <div style={styles.qrWrapper}>
+              <div className="qrWrapper">
                 {sessionIdRef.current ? (
                   <>
-                    <p style={styles.headerBlack}>Scan this QR Code to connect:</p>
+                    <p className="headerBlack">Scan this QR Code to connect:</p>
                     <QRCodeCanvas value={sessionIdRef.current} size={400} />
-                    <p style={styles.status}>{status}</p>
+                    <p className="status">{status}</p>
                   </>
                 ) : (
                   <div>
-                    <p style={styles.status}>Generating QR Code...</p>
-                    <p style={styles.status}>The backend is probably starting up right now.</p>
-                    <p style={styles.status}>That can take 50 seconds or more.</p>
+                    <p className="status">Generating QR Code...</p>
+                    <p className="status">The backend is probably starting up right now.</p>
+                    <p className="status">That can take 50 seconds or more.</p>
                   </div>
                 )}
               </div>
@@ -492,24 +373,24 @@ useEffect(() => {
           )}
       
           {currentScreen === SCREENS.SUBJECT_ID && (
-            <div style={styles.screen2}>
-              <p style={styles.headerBlack}>Mobile app connected!</p>
+            <div className="screen2">
+              <p className="headerBlack">Mobile app connected!</p>
               <input
                 type="text"
                 placeholder="Enter Subject ID"
                 value={subjectId}
                 onChange={(e) => setSubjectId(e.target.value)}
-                style={styles.input}
+                className="input"
               />
-              <button onClick={sendSubjectId} style={styles.button}>
+              <button onClick={sendSubjectId} className="button">
                 Send Subject ID
               </button>
             </div>
           )}
       
           {currentScreen === SCREENS.WELCOME && (
-            <div style={styles.screen3}>
-              <p style={styles.header}>Welcome to the study</p>
+            <div className="screen3">
+              <p className="header">Welcome to the study</p>
             </div>
           )}
       
@@ -523,7 +404,7 @@ useEffect(() => {
           )}
       
           {currentScreen === SCREENS.TARGET && (
-            <div style={styles.screen3}>
+            <div className="screen3">
             <TargetDisplay
                 subjectId={subjectId}
                 pdfId={currentPdfId}
@@ -543,7 +424,7 @@ useEffect(() => {
   </div>
 )} 
           {currentScreen === SCREENS.OVERALLPREFERENCES && (
-            <div style={styles.screen3}>
+            <div className="screen3">
               <OverallPreferences 
               subjectId={subjectId}
               onSubmit={handleOverallPreferencesSubmit}
@@ -552,7 +433,7 @@ useEffect(() => {
           )}
       
           {currentScreen === SCREENS.COMPLETION && (
-            <div style={styles.screen3}>
+            <div className="screen3">
               <CompletionScreen />
             </div>
           )}
@@ -561,61 +442,3 @@ useEffect(() => {
 };
 
 export default Sender;
-
-const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    backgroundColor: "#000",
-    color: "#fff",
-  },
-  qrWrapper: {
-    backgroundColor: "#fff",
-    padding: "20px",
-    borderRadius: "10px",
-    textAlign: "center",
-  },
-  status: {
-    marginTop: "10px",
-    color: "#333",
-  },
-  headerBlack: {
-    fontSize: "30px",
-    marginBottom: "20px",
-    color: 'black',
-    fontWeight:'bold',
-  },
-  header: {
-    fontSize: "30px",
-    marginBottom: "20px",
-    fontWeight:'bold',
-  },
-  input: {
-    padding: "10px",
-    fontSize: "16px",
-    marginBottom: "20px",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-    width: "80%",
-  },
-  button: {
-    padding: "10px 20px",
-    fontSize: "16px",
-    backgroundColor: "#007BFF",
-    color: "#fff",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-  screen1: {
-    textAlign: "center",
-  },
-  screen2: {
-    textAlign: "center",
-  },
-  screen3: {
-    textAlign: "center",
-  },
-};
