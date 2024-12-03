@@ -121,7 +121,7 @@ const targetTable = {
       {
         pdf: "PDF2",
         targets: [
-            "target1", "target5", 
+            "target7", "target8", 
         ],
         landmarks: "ColorIcons", 
     }
@@ -153,14 +153,14 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [currentLandmarks, setCurrentLandmarks] = useState("");
   const startTime = useRef(null);
   const isFetchingSession = useRef(false);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(10);
   const [countdownActive, setCountdownActive] = useState(false);
   const currentTargetIndexRef = useRef(0);
   const currentTargetsRef = useRef([]);
   
   useEffect(() => {
     if (currentScreen === SCREENS.COUNTDOWN) {
-      setTimeLeft(60); 
+      setTimeLeft(10); 
       setCountdownActive(true); // Start countdown when screen switches
     }
   }, [currentScreen]);
