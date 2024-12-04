@@ -10,7 +10,7 @@ import targetTable from "./targetTable";
 //redux
 import { useSelector, useDispatch } from "react-redux";
 import {startCountdown, decrementTime, stopCountdown,} from "../store/countdownSlice";
-
+import { setScreen } from "../store/screenSlice";
 
 const SCREENS = {
   QR_CODE: 1, 
@@ -30,7 +30,6 @@ const wsRef = useRef(null);
 //States
 const [messages, setMessages] = useState([]);
 const [status, setStatus] = useState("Generating QR code...");
-const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 //   PDF & Targets
   const [subjectId, setSubjectId] = useState("");
   const [currentPdfId, setCurrentPdfId] = useState(null);
@@ -41,9 +40,9 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const currentTargetsRef = useRef([]);
 //Redux
   const dispatch = useDispatch();
-  const timeLeft = useSelector((state) => state.countdown.timeLeft);
-  const isActive = useSelector((state) => state.countdown.isActive);
-
+  const timeLeft = useSelector((state) => state.countdown.timeLeft); //Countdown
+  const isActive = useSelector((state) => state.countdown.isActive); //Countdown
+  const currentScreen = useSelector((state) => state.screen.currentScreen); //screen
 
   
   useEffect(() => {
@@ -112,9 +111,9 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
 
       if (message.type === "mobileConnected") {
         console.log("Mobile app connected. Transitioning to Subject ID input.");
-        setCurrentScreen(SCREENS.SUBJECT_ID);
+        dispatch(setScreen(SCREENS.SUBJECT_ID));
       } else if (message.type === "Begin") {
-        setCurrentScreen(SCREENS.COUNTDOWN);
+        dispatch(setScreen(SCREENS.COUNTDOWN));
         console.log("Received Begin");
     } else if (message.type === "TARGETFOUND") {
         const [subject, pdfLabel, targetLabel, landmarkType, tapCount, distance] = message.message.split(",");
@@ -174,7 +173,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
             sendMessage("PDF", pdf.pdf);
             sendMessage("LANDMARK", pdf.landmarks);
           }
-        setCurrentScreen(SCREENS.WELCOME);
+        dispatch(setScreen(SCREENS.WELCOME));
         sendMessage("subjectId", subjectId);
     } else {
         console.error("WebSocket is not connected. Unable to send Subject ID.");
@@ -182,7 +181,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   };
   const handleCountdownComplete = () => {
     console.log("Countdown complete, transitioning to TARGET screen.");
-    setCurrentScreen(SCREENS.TARGET);
+    dispatch(setScreen(SCREENS.TARGET));
   
     // Load targets for the current PDF
     const subjectKey = `subject${subjectId}`;
@@ -212,7 +211,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     }
   
     // Transition to the next state after submission
-    setCurrentScreen(SCREENS.COMPLETION);
+    dispatch(setScreen(SCREENS.COMPLETION));
   };
 
   const handleNasaTLXSubmit = async (subjectId, pdf, responses) => {
@@ -258,11 +257,11 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
         setCurrentLandmarks(nextPdf.landmarks);
 
         console.log(`Loaded next PDF: ${nextPdf.pdf}`);
-        setCurrentScreen(SCREENS.COUNTDOWN); // Start countdown for the next PDF
+        dispatch(setScreen(SCREENS.COUNTDOWN)); // Start countdown for the next PDF
     } else {
         // No more PDFs, transition to OVERALLPREFERENCES
         console.log("All PDFs processed. Moving to Overall Preferences.");
-        setCurrentScreen(SCREENS.OVERALLPREFERENCES);
+        dispatch(setScreen(SCREENS.OVERALLPREFERENCES));
     }
   };
 
@@ -277,7 +276,7 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     console.log(`Sent next target: ${nextTarget} (Index: ${currentTargetIndexRef.current})`);
     } else {
     console.log("No more targets in the current PDF. Transitioning to NASATLX.");
-    setCurrentScreen(SCREENS.NASATLX);
+    dispatch(setScreen(SCREENS.NASATLX));
     sendMessage("TARGET", "NULL");
     sendMessage("PDFCOMPLETE", "NULL");
     }

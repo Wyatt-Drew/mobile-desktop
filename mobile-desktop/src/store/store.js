@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import countdownSlice from "./countdownSlice";
+import countdownReducer from "./countdownSlice";
+import screenReducer from "./screenSlice";
 
 const store = configureStore({
   reducer: {
-    countdown: countdownSlice,
+    countdown: countdownReducer,
+    screen: screenReducer,
   },
 });
 
