@@ -7,6 +7,9 @@ import CompletionScreen from "../pages/CompletionScreen";
 import { appendRow } from "./googleSheetsService";
 import './Sender.css';
 import targetTable from "./targetTable";
+//redux
+import { useSelector, useDispatch } from "react-redux";
+import {startCountdown, decrementTime, stopCountdown,} from "../store/countdownSlice";
 
 
 const SCREENS = {
@@ -34,35 +37,35 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
   const [currentLandmarks, setCurrentLandmarks] = useState("");
   const startTime = useRef(null);
   const isFetchingSession = useRef(false);
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [countdownActive, setCountdownActive] = useState(false);
   const currentTargetIndexRef = useRef(0);
   const currentTargetsRef = useRef([]);
+//Redux
+  const dispatch = useDispatch();
+  const timeLeft = useSelector((state) => state.countdown.timeLeft);
+  const isActive = useSelector((state) => state.countdown.isActive);
+
+
   
   useEffect(() => {
     if (currentScreen === SCREENS.COUNTDOWN) {
-      setTimeLeft(10); 
-      setCountdownActive(true); // Start countdown when screen switches
+      dispatch(startCountdown(10)); 
     }
   }, [currentScreen]);
 
   useEffect(() => {
-    if (countdownActive && timeLeft > 0) {
+    if (isActive && timeLeft > 0) {
       const timer = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            clearInterval(timer);
-            handleCountdownComplete(); 
-            setCountdownActive(false);
-            return 0;
-          }
-          return prevTime - 1;
-        });
+        dispatch(decrementTime());
       }, 1000);
-
-      return () => clearInterval(timer); // Cleanup on unmount
+  
+      return () => clearInterval(timer);
     }
-  }, [timeLeft, countdownActive]);
+  
+    if (timeLeft === 0) {
+      handleCountdownComplete();
+      dispatch(stopCountdown());
+    }
+  }, [dispatch, isActive, timeLeft]);
 
 
   
@@ -178,10 +181,6 @@ const [currentScreen, setCurrentScreen] = useState(SCREENS.QR_CODE);
     }
   };
   const handleCountdownComplete = () => {
-    if (currentScreen !== SCREENS.COUNTDOWN)
-      {
-        return;
-      }
     console.log("Countdown complete, transitioning to TARGET screen.");
     setCurrentScreen(SCREENS.TARGET);
   
