@@ -24,21 +24,23 @@ const SCREENS = {
 };
 
 const Sender = () => {
-// Web Sockets
-const sessionIdRef = useRef(null);
-const wsRef = useRef(null);
-//States
-const [messages, setMessages] = useState([]);
-const [status, setStatus] = useState("Generating QR code...");
+
 //   PDF & Targets
-  const [subjectId, setSubjectId] = useState("");
-  const [currentPdfId, setCurrentPdfId] = useState(null);
-  const [currentLandmarks, setCurrentLandmarks] = useState("");
-  const startTime = useRef(null);
-  const isFetchingSession = useRef(false);
   const currentTargetIndexRef = useRef(0);
   const currentTargetsRef = useRef([]);
-//Redux
+// UseState - best used for variables that do not cross components
+const [subjectId, setSubjectId] = useState("");
+const [currentPdfId, setCurrentPdfId] = useState(null);
+const [messages, setMessages] = useState([]);
+const [status, setStatus] = useState("Generating QR code...");
+
+//UseRef - best used for not part of UI rendering
+const startTime = useRef(null);
+const isFetchingSession = useRef(false);
+const sessionIdRef = useRef(null);
+const wsRef = useRef(null);
+
+//Redux - best used for global state management.
   const dispatch = useDispatch();
   const timeLeft = useSelector((state) => state.countdown.timeLeft); //Countdown
   const isActive = useSelector((state) => state.countdown.isActive); //Countdown
@@ -169,7 +171,6 @@ const [status, setStatus] = useState("Generating QR code...");
             currentTargetsRef.current = pdf.targets || []; // Ensure it's an array
             currentTargetIndexRef.current = 0; // Reset index
             setCurrentPdfId(pdf.pdf); 
-            setCurrentLandmarks(pdf.landmarks);
             sendMessage("PDF", pdf.pdf);
             sendMessage("LANDMARK", pdf.landmarks);
           }
@@ -254,8 +255,6 @@ const [status, setStatus] = useState("Generating QR code...");
             currentTargetsRef.current = []; // Fall back to an empty list if targets are undefined or empty
         }
         setCurrentPdfId(nextPdf.pdf);
-        setCurrentLandmarks(nextPdf.landmarks);
-
         console.log(`Loaded next PDF: ${nextPdf.pdf}`);
         dispatch(setScreen(SCREENS.COUNTDOWN)); // Start countdown for the next PDF
     } else {
