@@ -97,9 +97,11 @@ const wsRef = useRef(null);
   const autoConnect = (sessionId) => {
     const socket = new WebSocket("wss://mobile-backend-74th.onrender.com");
     wsRef.current = socket;
+    let retryCount = 0;
 
     socket.onopen = () => {
       console.log("WebSocket connection opened.");
+      retryCount = 0; 
       const registerMessage = {
         type: "register",
         sessionId,
@@ -132,15 +134,20 @@ const wsRef = useRef(null);
         );
         console.log("Received TargetFound");
       }
-      
-      else {
-        console.log("Unhandled message type:", message.type);
-      }
     };
 
     socket.onclose = () => {
       console.log("WebSocket connection closed.");
-      setStatus("Connection closed.");
+      setStatus("Connection closed. Reconnecting...");
+      wsRef.current = null; // Reset WebSocket reference
+      if (retryCount < 5) {
+        retryCount++;
+        console.log(`Reconnecting... Attempt ${retryCount} of ${maxRetries}`);
+        setTimeout(connect, 1000); // Retry after 1 second
+      } else {
+        console.error("Max retries reached. Could not reconnect.");
+        setStatus("Failed to reconnect after multiple attempts.");
+      }
     };
 
     socket.onerror = (err) => console.error("WebSocket error:", err);
