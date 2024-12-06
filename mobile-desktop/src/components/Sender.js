@@ -292,6 +292,7 @@ const wsRef = useRef(null);
         sendMessage("PDFCOMPLETE", "NULL");
         return;
       }
+      startTime.current = Date.now();
       const { block: nextBlock, target: nextTarget } = currentTargetIndexRef.current;
       const nextTargetValue = blocks[nextBlock]?.[nextTarget];
       sendMessage("TARGET", nextTargetValue);
@@ -301,6 +302,7 @@ const wsRef = useRef(null);
   const handleNewPdfLoad = (pdf) => {
     currentTargetsRef.current = pdf.targets || [];
     currentTargetIndexRef.current = { block: 0, target: 0 };
+    startTime.current = Date.now();
     console.log("New PDF loaded. Target blocks:", currentTargetsRef.current);
   };
 useEffect(() => {
@@ -309,12 +311,6 @@ useEffect(() => {
       sendMessage("BLACKSCREEN", "NasaTLX loaded");
     }
   }, [currentScreen]);
-
-useEffect(() => {
-    startTime.current = Date.now();
-    console.log("Task start time set:", startTime.current);
-}, [currentTargetIndexRef.current]);
-
 
   const handleTargetFound = async (subject, pdfLabel, targetLabel, landmarkType, scrollDistance, numberOfTaps, block) => {
     console.log("Received data:", { scrollDistance, numberOfTaps });
