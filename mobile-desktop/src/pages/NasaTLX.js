@@ -44,6 +44,7 @@ const NasaTLX = ({ subjectId, pdf, currentLandmarks, onSubmit }) => {
       <div className="nasa-tlx-background">
         <div className="nasa-tlx-container">
           <h1>NASA Task Load Index (TLX)</h1>
+          <p>Please fill out the following form based on your experiences with the previous PDF interface.</p>
           <form className="nasa-tlx-form" onSubmit={handleSubmit}>
             <CustomSlider
               name="physicalDemand"
