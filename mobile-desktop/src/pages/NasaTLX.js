@@ -3,7 +3,7 @@ import CustomSlider from '../components/CustomSlider'; // Ensure the correct pat
 import Button from '@mui/material/Button';
 import './NasaTLX.css'; // Import the updated CSS
 
-const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
+const NasaTLX = ({ subjectId, pdf, currentLandmarks, onSubmit }) => {
   const [responses, setResponses] = useState({
     mentalDemand: 1,
     physicalDemand: 1,
@@ -23,7 +23,7 @@ const NasaTLX = ({ subjectId, pdf, onSubmit }) => {
     setIsSubmitting(true);
 
     try {
-      await onSubmit(subjectId, pdf, responses);
+      await onSubmit(subjectId, pdf, responses, currentLandmarks);
       console.log('NASA-TLX form submitted:', responses);
     } catch (error) {
       console.error('Error submitting NASA-TLX form:', error);

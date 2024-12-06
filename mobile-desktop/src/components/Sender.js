@@ -217,13 +217,14 @@ const wsRef = useRef(null);
     dispatch(setScreen(SCREENS.COMPLETION));
   };
 
-  const handleNasaTLXSubmit = async (subjectId, pdf, responses) => {
+  const handleNasaTLXSubmit = async (subjectId, pdf, responses, currentLandmarks) => {
     console.log(`Submitting NASA-TLX for ${subjectId}, PDF: ${pdf}`);
     try {
       // Write the responses to Google Sheets
       await appendRow("Nasa-TLX", [
         subjectId,
         pdf,
+        currentLandmarks,
         responses.mentalDemand,
         responses.physicalDemand,
         responses.temporalDemand,
@@ -408,6 +409,7 @@ useEffect(() => {
             <TargetDisplay
                 subjectId={subjectId}
                 pdfId={currentPdfId}
+                currentLandmarks={currentLandmarks}
                 target={currentTargetsRef.current[currentTargetIndexRef.current]}
             />
             </div>
@@ -419,6 +421,7 @@ useEffect(() => {
     <NasaTLX
       subjectId={subjectId}
       pdf={currentPdfId}
+      currentLandmarks={currentLandmarks}
       onSubmit={handleNasaTLXSubmit}
     />
   </div>
