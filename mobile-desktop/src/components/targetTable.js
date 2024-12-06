@@ -12,45 +12,45 @@ const targetTable = {
         {
             pdf: "PDF1",
             targets: [
-                "target1", "target3", "target4",
-                "target3", "target4", "target1",
-                "target4", "target1", "target3"
+                ["target1", "target3", "target4"],
+                ["target3", "target4", "target1"],
+                ["target4", "target1", "target3"]
             ],
             landmarks: "Numbers",
         },
         {
             pdf: "PDF2",
             targets: [
-                "target6", "target8", "target9",
-                "target8", "target9", "target6",
-                "target9", "target6", "target8"
+                ["target6", "target8", "target9"],
+                ["target8", "target9", "target6"],
+                ["target9", "target6", "target8"]
             ],
             landmarks: "No Icons",
         },
         {
             pdf: "PDF3",
             targets: [
-                "target11", "target13", "target15",
-                "target13", "target15", "target11",
-                "target15", "target11", "target13"
+                ["target11", "target13", "target15"],
+                ["target13", "target15", "target11"],
+                ["target15", "target11", "target13"]
             ],
             landmarks: "Letters", 
         },
         {
             pdf: "PDF4",
             targets: [
-                "target16", "target18", "target20",
-                "target18", "target20", "target16",
-                "target20", "target16", "target18"
+                ["target16", "target18", "target20"],
+                ["target18", "target20", "target16"],
+                ["target20", "target16", "target18"]
             ],
             landmarks: "Icons", 
         },
         {
             pdf: "PDF5",
             targets: [
-                "target21", "target22", "target24",
-                "target22", "target24", "target21",
-                "target24", "target21", "target22"
+                ["target21", "target22", "target24"],
+                ["target22", "target24", "target21"],
+                ["target24", "target21", "target22"]
             ],
             landmarks: "ColorIcons",
         },
@@ -59,45 +59,45 @@ const targetTable = {
         {
             pdf: "PDF1",
             targets: [
-              "target1", "target3", "target4",
-              "target3", "target4", "target1",
-              "target4", "target1", "target3"
+                ["target1", "target3", "target4"],
+                ["target3", "target4", "target1"],
+                ["target4", "target1", "target3"]
             ],
             landmarks: "No Icons", 
         },
         {
             pdf: "PDF2",
             targets: [
-              "target6", "target8", "target9",
-              "target8", "target9", "target6",
-              "target9", "target6", "target8"
+                ["target6", "target8", "target9"],
+                ["target8", "target9", "target6"],
+                ["target9", "target6", "target8"]
             ],
             landmarks: "Letters", 
         },
         {
             pdf: "PDF3",
             targets: [
-              "target11", "target13", "target15",
-              "target13", "target15", "target11",
-              "target15", "target11", "target13"
+                ["target11", "target13", "target15"],
+                ["target13", "target15", "target11"],
+                ["target15", "target11", "target13"]
             ],
             landmarks: "Icons", 
         },
         {
             pdf: "PDF4",
             targets: [
-              "target16", "target18", "target20",
-              "target18", "target20", "target16",
-              "target20", "target16", "target18"
+                ["target16", "target18", "target20"],
+                ["target18", "target20", "target16"],
+                ["target20", "target16", "target18"]
             ],
             landmarks: "ColorIcons", 
         },
         {
             pdf: "PDF5",
             targets: [
-              "target21", "target22", "target24",
-              "target22", "target24", "target21",
-              "target24", "target21", "target22"
+                ["target21", "target22", "target24"],
+                ["target22", "target24", "target21"],
+                ["target24", "target21", "target22"]
             ],
             landmarks: "Numbers",
         },
@@ -106,18 +106,18 @@ const targetTable = {
         {
             pdf: "PDF1",
             targets: [
-                "target1", "target5", 
+                ["target1", "target5"]
             ],
             landmarks: "Numbers", 
         },
         {
-          pdf: "PDF2",
-          targets: [
-              "target7", "target8", 
-          ],
-          landmarks: "ColorIcons", 
-      }
+            pdf: "PDF2",
+            targets: [
+                ["target7", "target8"]
+            ],
+            landmarks: "ColorIcons", 
+        }
     ]
-  };
+};
 
   export default targetTable;

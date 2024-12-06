@@ -26,8 +26,8 @@ const SCREENS = {
 const Sender = () => {
 
 //   PDF & Targets
-  const currentTargetIndexRef = useRef(0);
-  const currentTargetsRef = useRef([]);
+const currentTargetIndexRef = useRef({ block: 0, target: 0 });
+const currentTargetsRef = useRef([]);
 // UseState - best used for variables that do not cross components
 const [subjectId, setSubjectId] = useState("");
 const [currentPdfId, setCurrentPdfId] = useState(null);
@@ -170,7 +170,7 @@ const wsRef = useRef(null);
         if (targetTable[subjectKey]) {
             const pdf = targetTable[subjectKey][0];
             currentTargetsRef.current = pdf.targets || []; // Ensure it's an array
-            currentTargetIndexRef.current = 0; // Reset index
+            currentTargetIndexRef.current = { block: 0, target: 0 };// Reset index
             setCurrentPdfId(pdf.pdf); 
             setCurrentLandmarks(pdf.landmarks);
             sendMessage("PDF", pdf.pdf);
@@ -193,7 +193,8 @@ const wsRef = useRef(null);
   
     if (currentPdf) {
       handleNewPdfLoad(currentPdf); // Reset targets and index for this PDF
-      const firstTarget = currentTargetsRef.current[currentTargetIndexRef.current];
+      const { block, target } = currentTargetIndexRef.current;
+      const firstTarget = currentTargetsRef.current[block]?.[target];
       sendMessage("TARGET", firstTarget); // Send the first target
       console.log("Started new target sequence with:", firstTarget);
     } else {
@@ -270,24 +271,36 @@ const wsRef = useRef(null);
 
 
   const nextState = () => {
-    console.log("Current Target Index:", currentTargetIndexRef.current);
-    console.log("Current Targets Length:", currentTargetsRef.current.length);
-    if (currentTargetIndexRef.current < currentTargetsRef.current.length - 1) {
-    sendMessage("TARGET", currentTargetsRef.current[currentTargetIndexRef.current+1]);
-    currentTargetIndexRef.current += 1; // Increment index
-    const nextTarget = currentTargetsRef.current[currentTargetIndexRef.current];
-    console.log(`Sent next target: ${nextTarget} (Index: ${currentTargetIndexRef.current})`);
-    } else {
-    console.log("No more targets in the current PDF. Transitioning to NASATLX.");
-    dispatch(setScreen(SCREENS.NASATLX));
-    sendMessage("TARGET", "NULL");
-    sendMessage("PDFCOMPLETE", "NULL");
+    const { block, target } = currentTargetIndexRef.current;
+    const blocks = currentTargetsRef.current;
+  
+    if (block < blocks.length) {
+      const currentBlock = blocks[block];
+      if (target < currentBlock.length - 1) {
+        // Move to next target within the same block
+        currentTargetIndexRef.current.target += 1;
+      } else if (block < blocks.length - 1) {
+        // Move to the next block
+        currentTargetIndexRef.current.block += 1;
+        currentTargetIndexRef.current.target = 0;
+      } else {
+        // End of all blocks, transition to NASATLX
+        console.log("No more targets in the current PDF. Transitioning to NASATLX.");
+        dispatch(setScreen(SCREENS.NASATLX));
+        sendMessage("TARGET", "NULL");
+        sendMessage("PDFCOMPLETE", "NULL");
+        return;
+      }
+      const { block: nextBlock, target: nextTarget } = currentTargetIndexRef.current;
+      const nextTargetValue = blocks[nextBlock]?.[nextTarget];
+      sendMessage("TARGET", nextTargetValue);
+      console.log(`Sent next target: ${nextTarget}`);
     }
   };
   const handleNewPdfLoad = (pdf) => {
     currentTargetsRef.current = pdf.targets || [];
-    currentTargetIndexRef.current = 0;
-    console.log("New PDF loaded. Targets:", currentTargetsRef.current);
+    currentTargetIndexRef.current = { block: 0, target: 0 };
+    console.log("New PDF loaded. Target blocks:", currentTargetsRef.current);
   };
 useEffect(() => {
     if (currentScreen === SCREENS.NASATLX) {
@@ -410,7 +423,7 @@ useEffect(() => {
                 subjectId={subjectId}
                 pdfId={currentPdfId}
                 currentLandmarks={currentLandmarks}
-                target={currentTargetsRef.current[currentTargetIndexRef.current]}
+                target={currentTargetsRef.current[currentTargetIndexRef.current.block][currentTargetIndexRef.current.target]}
             />
             </div>
           )}
