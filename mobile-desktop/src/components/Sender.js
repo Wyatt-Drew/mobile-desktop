@@ -120,14 +120,15 @@ const wsRef = useRef(null);
         console.log("Received Begin");
     } else if (message.type === "TARGETFOUND") {
         const [subject, pdfLabel, targetLabel, landmarkType, tapCount, distance] = message.message.split(",");
-    
+        const { block, target } = currentTargetIndexRef.current;
         handleTargetFound(
             parseInt(subject, 10),            // Subject as integer
             pdfLabel,                         // PDF ID as string
             targetLabel,                      // Target ID as string
             landmarkType,                     // Landmark type as string
             parseInt(distance, 10),           // Scroll distance as integer
-            parseInt(tapCount, 10)            // Tap count as integer
+            parseInt(tapCount, 10),           // Tap count as integer
+            block+1,                          // Blocks start at 1 index starts at 0
         );
         console.log("Received TargetFound");
       }
@@ -315,7 +316,7 @@ useEffect(() => {
 }, [currentTargetIndexRef.current]);
 
 
-  const handleTargetFound = async (subject, pdfLabel, targetLabel, landmarkType, scrollDistance, numberOfTaps) => {
+  const handleTargetFound = async (subject, pdfLabel, targetLabel, landmarkType, scrollDistance, numberOfTaps, block) => {
     console.log("Received data:", { scrollDistance, numberOfTaps });
     
     // Validate inputs
@@ -325,7 +326,8 @@ useEffect(() => {
         typeof targetLabel !== "string" ||
         typeof landmarkType !== "string" ||
         typeof scrollDistance !== "number" ||
-        typeof numberOfTaps !== "number"
+        typeof numberOfTaps !== "number" ||
+        typeof block !== "number"
     ) {
         console.error("Invalid data received:", { subject, pdfLabel, targetLabel, landmarkType, scrollDistance, numberOfTaps });
         return; // Stop execution if data isn't valid
@@ -347,6 +349,7 @@ useEffect(() => {
         taskTime,      // Task time
         scrollDistance, // Scroll distance
         numberOfTaps,   // Number of taps
+        block,          // Block number
     ];
   
     try {
