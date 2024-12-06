@@ -258,7 +258,7 @@ const wsRef = useRef(null);
             currentTargetsRef.current = []; // Fall back to an empty list if targets are undefined or empty
         }
         setCurrentPdfId(nextPdf.pdf);
-        setCurrentLandmarks(pdf.landmarks);
+        setCurrentLandmarks(nextPdf.landmarks);
         console.log(`Loaded next PDF: ${nextPdf.pdf}`);
         dispatch(setScreen(SCREENS.COUNTDOWN)); // Start countdown for the next PDF
     } else {
