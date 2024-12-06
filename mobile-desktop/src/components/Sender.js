@@ -33,6 +33,7 @@ const [subjectId, setSubjectId] = useState("");
 const [currentPdfId, setCurrentPdfId] = useState(null);
 const [messages, setMessages] = useState([]);
 const [status, setStatus] = useState("Generating QR code...");
+const [currentLandmarks, setCurrentLandmarks] = useState("");
 
 //UseRef - best used for not part of UI rendering
 const startTime = useRef(null);
@@ -171,6 +172,7 @@ const wsRef = useRef(null);
             currentTargetsRef.current = pdf.targets || []; // Ensure it's an array
             currentTargetIndexRef.current = 0; // Reset index
             setCurrentPdfId(pdf.pdf); 
+            setCurrentLandmarks(pdf.landmarks);
             sendMessage("PDF", pdf.pdf);
             sendMessage("LANDMARK", pdf.landmarks);
           }
@@ -255,6 +257,7 @@ const wsRef = useRef(null);
             currentTargetsRef.current = []; // Fall back to an empty list if targets are undefined or empty
         }
         setCurrentPdfId(nextPdf.pdf);
+        setCurrentLandmarks(pdf.landmarks);
         console.log(`Loaded next PDF: ${nextPdf.pdf}`);
         dispatch(setScreen(SCREENS.COUNTDOWN)); // Start countdown for the next PDF
     } else {
