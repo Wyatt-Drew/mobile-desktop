@@ -125,10 +125,11 @@ const wsRef = useRef(null);
         } else if (message.type === "TARGETFOUND") {
           const [subject, pdfLabel, targetLabel, landmarkType, tapCount, distance] = message.message.split(",");
           const { block, target } = currentTargetIndexRef.current;
+          const targetId = currentTargetsRef.current[block]?.[target];
           handleTargetFound(
             parseInt(subject, 10),
             pdfLabel,
-            targetLabel,
+            targetId,
             landmarkType,
             parseInt(distance, 10),
             parseInt(tapCount, 10),
