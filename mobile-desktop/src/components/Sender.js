@@ -95,62 +95,70 @@ const wsRef = useRef(null);
   }, []);
 
   const autoConnect = (sessionId) => {
-    const socket = new WebSocket("wss://mobile-backend-74th.onrender.com");
-    wsRef.current = socket;
+    const maxRetries = 5; // Define maximum retry attempts
     let retryCount = 0;
-
-    socket.onopen = () => {
-      console.log("WebSocket connection opened.");
-      retryCount = 0; 
-      const registerMessage = {
-        type: "register",
-        sessionId,
+  
+    const connect = () => {
+      const socket = new WebSocket("wss://mobile-backend-74th.onrender.com");
+      wsRef.current = socket;
+  
+      socket.onopen = () => {
+        console.log("WebSocket connection opened.");
+        retryCount = 0; // Reset retries on successful connection
+        const registerMessage = {
+          type: "register",
+          sessionId,
+        };
+        socket.send(JSON.stringify(registerMessage));
       };
-      socket.send(JSON.stringify(registerMessage));
+  
+      socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        console.log("Message received:", message);
+  
+        if (message.type === "mobileConnected") {
+          console.log("Mobile app connected. Transitioning to Subject ID input.");
+          dispatch(setScreen(SCREENS.SUBJECT_ID));
+        } else if (message.type === "Begin") {
+          dispatch(setScreen(SCREENS.COUNTDOWN));
+          console.log("Received Begin");
+        } else if (message.type === "TARGETFOUND") {
+          const [subject, pdfLabel, targetLabel, landmarkType, tapCount, distance] = message.message.split(",");
+          const { block, target } = currentTargetIndexRef.current;
+          handleTargetFound(
+            parseInt(subject, 10),
+            pdfLabel,
+            targetLabel,
+            landmarkType,
+            parseInt(distance, 10),
+            parseInt(tapCount, 10),
+            block + 1
+          );
+          console.log("Received TargetFound");
+        }
+      };
+  
+      socket.onclose = () => {
+        console.log("WebSocket connection closed.");
+        setStatus("Connection closed. Reconnecting...");
+        wsRef.current = null; // Reset WebSocket reference
+  
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Reconnecting... Attempt ${retryCount} of ${maxRetries}`);
+          setTimeout(() => connect(), 1000); // Retry after 1 second
+        } else {
+          console.error("Max retries reached. Could not reconnect.");
+          setStatus("Failed to reconnect after multiple attempts.");
+        }
+      };
+  
+      socket.onerror = (err) => {
+        console.error("WebSocket error:", err);
+      };
     };
-
-
-    socket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      console.log("Message received:", message);
-
-      if (message.type === "mobileConnected") {
-        console.log("Mobile app connected. Transitioning to Subject ID input.");
-        dispatch(setScreen(SCREENS.SUBJECT_ID));
-      } else if (message.type === "Begin") {
-        dispatch(setScreen(SCREENS.COUNTDOWN));
-        console.log("Received Begin");
-    } else if (message.type === "TARGETFOUND") {
-        const [subject, pdfLabel, targetLabel, landmarkType, tapCount, distance] = message.message.split(",");
-        const { block, target } = currentTargetIndexRef.current;
-        handleTargetFound(
-            parseInt(subject, 10),            // Subject as integer
-            pdfLabel,                         // PDF ID as string
-            targetLabel,                      // Target ID as string
-            landmarkType,                     // Landmark type as string
-            parseInt(distance, 10),           // Scroll distance as integer
-            parseInt(tapCount, 10),           // Tap count as integer
-            block+1,                          // Blocks start at 1 index starts at 0
-        );
-        console.log("Received TargetFound");
-      }
-    };
-
-    socket.onclose = () => {
-      console.log("WebSocket connection closed.");
-      setStatus("Connection closed. Reconnecting...");
-      wsRef.current = null; // Reset WebSocket reference
-      if (retryCount < 5) {
-        retryCount++;
-        console.log(`Reconnecting... Attempt ${retryCount} of ${maxRetries}`);
-        setTimeout(connect, 1000); // Retry after 1 second
-      } else {
-        console.error("Max retries reached. Could not reconnect.");
-        setStatus("Failed to reconnect after multiple attempts.");
-      }
-    };
-
-    socket.onerror = (err) => console.error("WebSocket error:", err);
+  
+    connect(); // Initial connection
   };
 
   const sendMessage = (type, message) => {
