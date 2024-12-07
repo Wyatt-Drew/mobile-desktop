@@ -4,11 +4,11 @@ import "./OverallPreferences.css";
 
 const OverallPreferences = ({ subjectId, onSubmit }) => {
   const [responses, setResponses] = useState({
-    noLandmarks: { accuracy: 1, speed: 1, preference: 1 },
-    numbers: { accuracy: 1, speed: 1, preference: 1 },
-    iconsColored: { accuracy: 1, speed: 1, preference: 1 },
-    icons: { accuracy: 1, speed: 1, preference: 1 },
-    letters: { accuracy: 1, speed: 1, preference: 1 },
+    "No Landmarks": { accuracy: 1, speed: 1, preference: 1 },
+    "Numbers": { accuracy: 1, speed: 1, preference: 1 },
+    "Colored Icons": { accuracy: 1, speed: 1, preference: 1 },
+    "Icons": { accuracy: 1, speed: 1, preference: 1 },
+    "Letters": { accuracy: 1, speed: 1, preference: 1 },
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,11 +92,11 @@ const OverallPreferences = ({ subjectId, onSubmit }) => {
       <div className="preferences-container">
         <h1>Overall Preferences Questionnaire</h1>
         <form onSubmit={handleSubmit}>
-          {renderSection("noLandmarks", "No Landmarks")}
-          {renderSection("numbers", "Numbers")}
-          {renderSection("iconsColored", "Colored Icons")}
-          {renderSection("icons", "Icons")}
-          {renderSection("letters", "Letters")}
+          {renderSection("No Landmarks", "No Landmarks")}
+          {renderSection("Numbers", "Numbers")}
+          {renderSection("Colored Icons", "Colored Icons")}
+          {renderSection("Icons", "Icons")}
+          {renderSection("Letters", "Letters")}
           <button type="submit" className="submit-button" disabled={isSubmitting}>
             {isSubmitting ? "Submitting..." : "Submit"}
           </button>

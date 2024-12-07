@@ -209,14 +209,18 @@ const wsRef = useRef(null);
     const currentPdf = pdfs.find((entry) => entry.pdf === currentPdfId);
   
     if (currentPdf) {
-      handleNewPdfLoad(currentPdf); // Reset targets and index for this PDF
+      handleNewPdfLoad(currentPdf); 
       const { block, target } = currentTargetIndexRef.current;
       const firstTarget = currentTargetsRef.current[block]?.[target];
-      sendMessage("TARGET", firstTarget); // Send the first target
-      console.log("Started new target sequence with:", firstTarget);
-    } else {
+      if (firstTarget) {
+          sendMessage("TARGET", firstTarget);
+          console.log("Started new target sequence with:", firstTarget);
+      } else {
+          console.error("First target not found for block:", block, "target:", target);
+      }
+  } else {
       console.error("No matching PDF found for currentPdfId:", currentPdfId);
-    }
+  }
   };
   
 
