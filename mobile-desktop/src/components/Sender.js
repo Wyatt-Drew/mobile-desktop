@@ -347,7 +347,7 @@ useEffect(() => {
   
     const endTime = Date.now();
     const diff = endTime - startTime.current;
-    const taskTime = diff / 1000;
+    const taskTime = diff;
     if (isNaN(taskTime)) {
         console.error("Task time calculation failed.");
         return;
