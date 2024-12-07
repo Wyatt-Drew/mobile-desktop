@@ -3,12 +3,12 @@ import { createSlice } from "@reduxjs/toolkit";
 const countdownSlice = createSlice({
   name: "countdown",
   initialState: {
-    timeLeft: 10, // Initial time for the countdown
+    timeLeft: 60, // Initial time for the countdown
     isActive: false, // Whether the countdown is active
   },
   reducers: {
     startCountdown: (state, action) => {
-      state.timeLeft = action.payload || 10; // Set initial countdown time, default is 10
+      state.timeLeft = action.payload || 60; // Set initial countdown time, default is 10
       state.isActive = true;
     },
     decrementTime: (state) => {
