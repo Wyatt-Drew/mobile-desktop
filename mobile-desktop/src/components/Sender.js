@@ -50,7 +50,7 @@ const wsRef = useRef(null);
   
   useEffect(() => {
     if (currentScreen === SCREENS.COUNTDOWN) {
-      dispatch(startCountdown(10)); 
+      dispatch(startCountdown(120)); 
     }
   }, [currentScreen]);
 
