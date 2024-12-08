@@ -377,6 +377,14 @@ useEffect(() => {
   
     nextState();
   };
+  const handleFeedbackSubmit = async (feedback) => {
+    try {
+      await appendRow("Feedback", [subjectId, feedback]); // Append feedback to a Google Sheets or database
+      console.log("Feedback submitted successfully:", feedback);
+    } catch (error) {
+      console.error("Failed to submit feedback:", error);
+    }
+  };
 
   return (
         <div className="container">
@@ -467,9 +475,9 @@ useEffect(() => {
             </div>
           )}
       
-          {currentScreen === SCREENS.COMPLETION && (
+                {currentScreen === SCREENS.COMPLETION && (
             <div className="screen3">
-              <CompletionScreen />
+              <CompletionScreen onSubmitFeedback={handleFeedbackSubmit} />
             </div>
           )}
         </div>
